@@ -1,0 +1,66 @@
+[debug] [2025-03-20T04:45:02.936Z] ----------------------------------------------------------------------
+[debug] [2025-03-20T04:45:02.937Z] Command:       /Users/florent/.nvm/versions/node/v18.20.7/bin/node /opt/homebrew/bin/firebase init functions
+[debug] [2025-03-20T04:45:02.937Z] CLI Version:   13.31.2
+[debug] [2025-03-20T04:45:02.937Z] Platform:      darwin
+[debug] [2025-03-20T04:45:02.938Z] Node Version:  v18.20.7
+[debug] [2025-03-20T04:45:02.938Z] Time:          Thu Mar 20 2025 13:45:02 GMT+0900 (Japan Standard Time)
+[debug] [2025-03-20T04:45:02.939Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-03-20T04:45:03.070Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-03-20T04:45:03.070Z] > authorizing via signed-in user (florent.kowalczuk@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /Users/florent/Desktop/pixelynth
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2025-03-20T04:45:03.072Z] Using project from CLI flag: pixelynth-c41ea
+[debug] [2025-03-20T04:45:03.073Z] Checked if tokens are valid: true, expires at: 1742448728573
+[debug] [2025-03-20T04:45:03.073Z] Checked if tokens are valid: true, expires at: 1742448728573
+[debug] [2025-03-20T04:45:03.074Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/pixelynth-c41ea [none]
+[debug] [2025-03-20T04:45:03.620Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/pixelynth-c41ea 200
+[debug] [2025-03-20T04:45:03.620Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/pixelynth-c41ea {"projectId":"pixelynth-c41ea","projectNumber":"706633323779","displayName":"Pixelynth","name":"projects/pixelynth-c41ea","resources":{"hostingSite":"pixelynth-c41ea"},"state":"ACTIVE","etag":"1_64a46e7b-0d94-4bd7-b459-93d93fa68513"}
+[info] i  Using project pixelynth-c41ea (Pixelynth) 
+[info] 
+=== Functions Setup
+[debug] [2025-03-20T04:45:03.630Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-03-20T04:45:03.630Z] > authorizing via signed-in user (florent.kowalczuk@gmail.com)
+[debug] [2025-03-20T04:45:03.630Z] [iam] checking project pixelynth-c41ea for permissions ["firebase.projects.get"]
+[debug] [2025-03-20T04:45:03.630Z] Checked if tokens are valid: true, expires at: 1742448728573
+[debug] [2025-03-20T04:45:03.630Z] Checked if tokens are valid: true, expires at: 1742448728573
+[debug] [2025-03-20T04:45:03.630Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/pixelynth-c41ea:testIamPermissions [none]
+[debug] [2025-03-20T04:45:03.630Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/pixelynth-c41ea:testIamPermissions x-goog-quota-user=projects/pixelynth-c41ea
+[debug] [2025-03-20T04:45:03.630Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/pixelynth-c41ea:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-03-20T04:45:04.385Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/pixelynth-c41ea:testIamPermissions 200
+[debug] [2025-03-20T04:45:04.385Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/pixelynth-c41ea:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-03-20T04:45:04.385Z] Checked if tokens are valid: true, expires at: 1742448728573
+[debug] [2025-03-20T04:45:04.385Z] Checked if tokens are valid: true, expires at: 1742448728573
+[debug] [2025-03-20T04:45:04.385Z] Checked if tokens are valid: true, expires at: 1742448728573
+[debug] [2025-03-20T04:45:04.385Z] Checked if tokens are valid: true, expires at: 1742448728573
+[debug] [2025-03-20T04:45:04.385Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/pixelynth-c41ea/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-03-20T04:45:04.386Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/pixelynth-c41ea/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/pixelynth-c41ea
+[debug] [2025-03-20T04:45:04.386Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/pixelynth-c41ea/services/runtimeconfig.googleapis.com [none]
+[debug] [2025-03-20T04:45:04.386Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/pixelynth-c41ea/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/pixelynth-c41ea
+[debug] [2025-03-20T04:45:05.566Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/pixelynth-c41ea/services/runtimeconfig.googleapis.com 200
+[debug] [2025-03-20T04:45:05.566Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/pixelynth-c41ea/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2025-03-20T04:45:05.567Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/pixelynth-c41ea/services/cloudfunctions.googleapis.com 200
+[debug] [2025-03-20T04:45:05.567Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/pixelynth-c41ea/services/cloudfunctions.googleapis.com [omitted]
+[info] 
+Detected existing codebase(s): default, synch
+

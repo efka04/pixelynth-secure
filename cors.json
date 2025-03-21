@@ -1,0 +1,11 @@
+[
+    {
+      "origin": [
+        "https://www.pixelynth.com",
+        "http://localhost:3000"
+      ],
+      "responseHeader": ["Content-Type"],
+      "method": ["GET", "POST", "PUT"],
+      "maxAgeSeconds": 3600
+    }
+]

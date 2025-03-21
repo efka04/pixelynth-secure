@@ -1,0 +1,11 @@
+
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/hooks/*": ["app/hooks/*"],
+      "@/components/*": ["app/components/*"]
+      // Ajoutez d'autres alias si nécessaire
+    }
+  }
+}

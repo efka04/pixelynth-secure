@@ -1,0 +1,14 @@
+User-agent: *
+Disallow: /api/
+Disallow: /account/
+Disallow: /signin
+Disallow: /admin/
+Disallow: /register/
+Allow: /
+
+
+Sitemap: https://pixelynth.com/sitemap-index.xml
+Sitemap: https://pixelynth.com/sitemap-blogs.xml
+Sitemap: https://pixelynth.com/sitemap-posts.xml
+Sitemap: https://pixelynth.com/sitemap-static.xml
+Sitemap: https://pixelynth.com/sitemap-tags.xml
