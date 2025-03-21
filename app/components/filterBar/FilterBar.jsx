@@ -36,7 +36,7 @@ export default function FilterBar() {
     }, [setSelectedPeople, setSelectedColor, setSelectedOrientation, setSelectedSort]);
 
     return (
-        <div className="sticky top-[50px] bg-white z-40 py-2  hidden sm:block">
+        <div className="sticky top-[50px] bg-white z-40 py-2 sm:block">
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                     {colorSelectorMemo}

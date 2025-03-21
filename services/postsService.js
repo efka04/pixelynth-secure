@@ -34,6 +34,11 @@ export async function getPostsPaginated(lastDoc = null, pageSize = 20, filters =
   if (filters.selectedCategory) {
     constraints.push(where("categories", "array-contains", filters.selectedCategory));
   }
+  
+  // Ajouter le filtre de recherche si présent
+  if (filters.searchQuery) {
+    constraints.push(where("tags", "array-contains", filters.searchQuery.toLowerCase()));
+  }
 
   if (lastDoc) {
     constraints.push(startAfter(lastDoc));

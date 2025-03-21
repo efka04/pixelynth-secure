@@ -1,8 +1,10 @@
-
-export const metadata = {
-    robots: 'noindex, nofollow'
-};
+'use client';
+import { CategoryProvider } from '@/app/context/CategoryContext';
 
 export default function SearchLayout({ children }) {
-    return <>{children}</>;
+    return (
+        <CategoryProvider>
+            {children}
+        </CategoryProvider>
+    );
 }

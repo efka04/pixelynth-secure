@@ -21,8 +21,8 @@ const SortPeople = ({ selectedPeople, onPeopleChange }) => {
   };
 
   const handleSelect = (option) => {
-    console.log('selectedSort ->', option.value);
-    onSortChange(option.value);
+    console.log('selectedPeople ->', option.value);
+    onPeopleChange(option.value); // Correct - utilise le bon nom de fonction
     setIsOpen(false);
   };
 
