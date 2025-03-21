@@ -1,0 +1,110 @@
+@import '@/styles/fonts.css';; /* Adjusted path to match the project structure */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background); /* Use your intended background variable */
+  font-family: 'PPNeueMachina', sans-serif;
+  font-weight: 300; /* Light */
+}
+
+h1 {
+  color: var(--foreground);
+  background: var(--background);
+  font-family:'PPNeueMachina', sans-serif;
+}
+
+/* Ensure grid styles are properly handled */
+.grid {
+    display: grid;
+    gap: 1.5rem; /* Adjust gap as needed */
+}
+
+/* Masonry grid styles */
+.masonry-grid {
+  display: flex;
+  width: auto;
+}
+
+.masonry-grid_column {
+  background-clip: padding-box;
+}
+
+/* Optional: Add animation for new items */
+.masonry-grid_column > div {
+  transition: transform 0.3s ease;
+}
+
+/* Masonry specific styles */
+.my-masonry-grid {
+  display: flex;
+  margin-left: -16px; /* gutter size offset */
+  width: auto;
+}
+
+.my-masonry-grid_column {
+  padding-left: 16px; /* gutter size */
+  background-clip: padding-box;
+}
+
+.my-masonry-grid_column > div {
+  margin-bottom: 16px;
+}
+
+/* Remove Quill Editor Styles */
+/* .ql-editor, .ql-container, .prose .ql-align-* {...} DELETE THESE */
+
+/* Draft.js Editor Styles */
+.DraftEditor-root {
+  min-height: 300px;
+}
+
+.public-DraftEditorPlaceholder-root {
+  color: #9ca3af;
+  position: absolute;
+}
+
+.public-DraftEditor-content {
+  min-height: 300px;
+  padding: 0.5rem;
+}
+
+.public-DraftStyleDefault-block {
+  margin: 0.5em 0;
+}
+
+/* Style for bold text */
+.public-DraftStyleDefault-bold {
+  font-weight: bold;
+}
+
+/* Style for italic text */
+.public-DraftStyleDefault-italic {
+  font-style: italic;
+}
+
+@layer utilities {
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+}
