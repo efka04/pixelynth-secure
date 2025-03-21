@@ -3,7 +3,7 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useCategory } from '../context/CategoryContext';
 import { categories, categoryColors } from '@/app/utils/constants';
 
-export default function CategoryBar() {
+export default function CategoryBar({ className, isSticky }) {
     const { selectedCategory, setSelectedCategory } = useCategory();
     const categoriesRef = useRef(null);
 
@@ -66,7 +66,11 @@ export default function CategoryBar() {
     );
 
     return (
-        <div className="relative bg-white -translate-y-2 mb-0">
+        <div
+            className={`relative bg-white -translate-y-2 mb-0 ${
+                isSticky ? 'sticky top-[61px] z-50' : ''
+            }`} // Adjust top to match header height
+        >
             <button
                 onClick={() => scroll('left')}
                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gradient-to-r from-white to-transparent w-5"

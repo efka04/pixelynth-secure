@@ -29,8 +29,8 @@ export default function OptimizedSearchResults() {
         <main className="min-h-screen p-4 md:p-2">
             <div className="max-w-7xl mx-auto">
                 <FilterBar />
-                <div className="flex justify-between items-center my-5 mb-8">
-                    <h1 className="font-bold text-4xl">{decodedQuery}</h1>
+                <div className="flex justify-between items-center my-0 mb-2">
+                    <h1 className="font-bold text-4xl"></h1>
                     {!isSearching && (
                         <p className="text-gray-500">
                             {totalResults} result{totalResults !== 1 ? 's' : ''}

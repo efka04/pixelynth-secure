@@ -8,6 +8,8 @@ import FilterBar from '@/app/components/filterBar/FilterBar';
 import CategoryBar from '@/app/components/CategoryBar';
 import TopContributors from '@/app/components/TopContributors'; // Import TopContributors component
 import PostsPage from '@/app/posts/page';
+import { useRouter } from 'next/router'; // Import useRouter
+import { usePathname } from 'next/navigation'; // Import usePathname
 
 // Import dynamique d'ArticleList avec Suspense
 const ArticleList = dynamic(() => import('@/app/components/ArticleList'), {
@@ -16,6 +18,7 @@ const ArticleList = dynamic(() => import('@/app/components/ArticleList'), {
 
 export default function RootPage() {
   const { searchResults, performSearch, selectedPeople } = useSearch();
+  const pathname = usePathname(); // Get the current route
 
   useEffect(() => {
     performSearch();
@@ -40,8 +43,8 @@ export default function RootPage() {
           <meta name="keywords" content="AI images, stock photos, free images, artificial intelligence, digital art, stock images, AI generated images, AI pictures" />
         </Head>
         <div className="pt-2 w-full">
-          <div className="max-w-7xl mx-auto px-4">
-            <CategoryBar />
+          <div className="max-w-7xl mx-auto px-4"> {/* Add pt-16 for spacing */}
+            <CategoryBar isSticky={pathname === '/'} /> {/* Pass isSticky prop */}
 
             <div className="flex flex-col md:flex-row items-stretch gap-6 mb-4">
               {/* Bloc Titre (2/3) */}
@@ -55,13 +58,10 @@ export default function RootPage() {
                   </p>
                 </div>
               </div>
-
               {/* Bloc Top Contributors */}
               <TopContributors />
             </div>
-
             <div className="mb-4">
-              <FilterBar />
             </div>
             <Suspense fallback={<div></div>}>
               <PostsPage listPosts={searchResults} selectedPeople={selectedPeople} />

@@ -293,7 +293,7 @@ const ImageUploadForm = forwardRef(
 
     return (
       <div className="w-full">
-        <div className="flex flex-col mx-auto gap-0 overflow-y-auto overflow-x-hidden relative bg-white shadow-lg rounded-xl p-3 md:p-6">
+        <div className="flex flex-col mx-auto gap-0 overflow-y-auto overflow-x-hidden relative bg-white border border-black rounded-xl p-3 md:p-6">
           {preview ? (
             <div className="relative w-full h-[150px] md:h-[200px] flex items-center justify-center bg-gray-50 rounded-md mb-4">
               <div className="relative w-full h-full">
