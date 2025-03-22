@@ -1,125 +1,93 @@
 const admin = require('firebase-admin');
-const sharp = require('sharp');
-const serviceAccount = require('../pixelynth-c41ea-firebase-adminsdk-as8n5-d5bc520bb9.json');
+const path = require('path');
+const serviceAccount = require('/Users/florent/Desktop/pixelynth-c41ea-192f169441e8.json');
 
-// Initialize Firebase Admin
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  storageBucket: 'pixelynth-c41ea.firebasestorage.app' // Update this with your bucket name
+  storageBucket: 'pixelynth-c41ea.firebasestorage.app',
+  databaseURL: 'https://pixelynth-c41ea.firebaseio.com'
 });
 
 const bucket = admin.storage().bucket();
+const firestore = admin.firestore();
 
-async function convertToWebp() {
+async function updatePostWebpUrls() {
   try {
-    // Get existing webp files first
-    const [webpFiles] = await bucket.getFiles({ prefix: 'webp/' });
-    const existingWebpNames = new Set(
-      webpFiles.map(file => file.name.split('/').pop())
-    );
-    console.log(`Found ${webpFiles.length} existing WebP files`);
-
-    // List all files to debug
-    const [allFiles] = await bucket.getFiles();
-    console.log('Available folders:', new Set(allFiles.map(file => file.name.split('/')[0])));
-
-    // Get files from images folder (corrected path)
-    const [files] = await bucket.getFiles({ prefix: 'images/' });
+    console.log('Début de la mise à jour des documents de la collection "post"...');
     
-    if (files.length === 0) {
-      console.log('No files found in images/. Available paths:');
-      allFiles.forEach(file => console.log(file.name));
-      process.exit(1);
+    // Récupérer tous les documents de la collection 'post'
+    const postsSnapshot = await firestore.collection('post').get();
+    if (postsSnapshot.empty) {
+      console.log('Aucun document trouvé dans la collection "post".');
+      return;
     }
-    
-    console.log(`Found ${files.length} files to convert`);
 
-    let skippedCount = 0;
-    let convertedCount = 0;
-
-    for (const file of files) {
-      const filename = file.name.split('/').pop();
-      if (!filename) continue; // Skip if no filename
-
-      // Check if WebP version already exists
-      const webpFileName = filename.replace(/\.[^/.]+$/, '.webp');
-      if (existingWebpNames.has(webpFileName)) {
-        console.log(`Skipping ${filename} - WebP version already exists`);
-        skippedCount++;
+    for (const doc of postsSnapshot.docs) {
+      const data = doc.data();
+      
+      // Vérifier que le champ webpURL est présent
+      if (!data.webpURL) {
+        console.log(`Document ${doc.id} ignoré : champ "webpURL" non trouvé.`);
         continue;
       }
-
-      console.log(`Converting ${filename}...`);
-
-      // Download the file
-      const tempFilePath = `/tmp/${filename}`;
-      await file.download({ destination: tempFilePath });
-
-      // Convert to WebP using sharp with 700px width
-      const webpBuffer = await sharp(tempFilePath)
-        .resize(700, null, {  // Set width to 700px, height auto to maintain aspect ratio
-          withoutEnlargement: true,  // Don't enlarge if image is smaller
-          fit: 'inside'
-        })
-        .webp({ 
-          quality: 80,
-          lossless: false,
-          effort: 6,
-          preset: 'photo'
-        })
-        .toBuffer();
-
-      // Upload with public access and metadata
-      const webpFile = bucket.file(`webp/${webpFileName}`);
       
-      // First save the file
-      await webpFile.save(webpBuffer, {
-        metadata: {
-          contentType: 'image/webp',
-          metadata: {
-            originalFile: filename,
-            sourceFolder: 'images',
-            firebaseStorageDownloadTokens: Date.now() // Add a download token
-          }
-        }
-      });
-
-      // Make the file publicly accessible
-      await webpFile.makePublic();
-
-      // Get the token from metadata
-      const [metadata] = await webpFile.getMetadata();
-      const token = metadata.metadata.firebaseStorageDownloadTokens;
-
-      // Construct the Firebase Storage download URL
-      const encodedFileName = encodeURIComponent(`webp/${webpFileName}`);
-      const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedFileName}?alt=media&token=${token}`;
+      let originalFilename;
+      const fieldValue = data.webpURL;
       
-      console.log(`Successfully converted ${filename} to WebP`);
-      console.log(`Public URL: ${publicUrl}`);
-
-      // Update the file metadata with the URL
-      await webpFile.setMetadata({
-        metadata: {
-          ...metadata.metadata,
-          publicUrl: publicUrl
+      // Si la valeur est une URL, on extrait le nom du fichier depuis le pathname
+      if (fieldValue.startsWith('http')) {
+        try {
+          const url = new URL(fieldValue);
+          // Le chemin contient typiquement "/o/webp%2Fnomdufichier.ext" ; on récupère la partie après "/o/"
+          const pathPart = decodeURIComponent(url.pathname.split('/o/')[1] || '');
+          originalFilename = path.basename(pathPart);
+        } catch (error) {
+          console.error(`Erreur d'analyse de l'URL dans le document ${doc.id} : ${error.message}`);
+          continue;
         }
-      });
-
-      convertedCount++;
+      } else {
+        // Si ce n'est pas une URL, on considère que c'est le nom du fichier directement
+        originalFilename = fieldValue;
+      }
+      
+      // Vérifier si le fichier (tel qu'extrait) se termine déjà par .webp
+      if (originalFilename.toLowerCase().endsWith('.webp')) {
+        console.log(`Document ${doc.id} déjà mis à jour (WebP déjà présent).`);
+        continue;
+      }
+      
+      // Déduire le nom du fichier WebP en remplaçant l'extension par .webp
+      const webpFilename = originalFilename.replace(/\.[^/.]+$/, '.webp');
+      const webpFilePath = `webp/${webpFilename}`;
+      
+      // Obtenir la référence au fichier WebP dans le bucket
+      const webpFile = bucket.file(webpFilePath);
+      try {
+        const [metadata] = await webpFile.getMetadata();
+        const token = metadata.metadata.firebaseStorageDownloadTokens;
+        const encodedFileName = encodeURIComponent(webpFilePath);
+        const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedFileName}?alt=media&token=${token}`;
+        
+        // Mettre à jour le document Firestore avec le nouveau lien
+        await doc.ref.update({ webpURL: publicUrl });
+        console.log(`Document ${doc.id} mis à jour : webpURL = ${publicUrl}`);
+      } catch (error) {
+        console.error(`Erreur pour le document ${doc.id} en traitant ${webpFilePath} : ${error.message}`);
+      }
     }
 
-    console.log(`
-      Conversion complete!
-      Converted: ${convertedCount}
-      Skipped: ${skippedCount}
-      Total processed: ${files.length}
-    `);
-    process.exit(0);
+    console.log('Mise à jour terminée.');
   } catch (error) {
-    console.error('Error:', error);
-    process.exit(1);
+    console.error('Erreur lors du traitement des documents :', error.message);
   }
 }
 
-convertToWebp();
+updatePostWebpUrls()
+  .then(() => {
+    console.log('Script terminé avec succès.');
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('Script échoué :', error);
+    process.exit(1);
+  });
