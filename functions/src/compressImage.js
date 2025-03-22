@@ -59,19 +59,30 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
     
     console.log(`Image compressée en WebP à ${webpFilePath}`);
     
-    // Télécharger la version WebP dans Storage
+    // Récupérer les métadonnées de l'image originale pour obtenir le token
+    const [originalMetadata] = await bucket.file(filePath).getMetadata();
+    
+    // Extraire le token de l'image originale de manière fiable
+    // Si le token n'existe pas dans les métadonnées, en générer un nouveau
+    const originalToken = originalMetadata.metadata?.firebaseStorageDownloadTokens || 
+                         admin.storage().bucket().generateId();
+    
+    console.log(`Token utilisé pour l'image WebP: ${originalToken}`);
+    
+    // Télécharger la version WebP dans Storage avec le même token que l'original
     await bucket.upload(webpFilePath, {
       destination: webpStoragePath,
       metadata: {
         contentType: 'image/webp',
         metadata: {
           originalPath: filePath,
-          firebaseStorageDownloadTokens: object.metadata?.firebaseStorageDownloadTokens
+          // Utiliser exactement le même token que l'image originale
+          firebaseStorageDownloadTokens: originalToken
         }
       }
     });
     
-    console.log(`Version WebP téléchargée à ${webpStoragePath}`);
+    console.log(`Version WebP téléchargée à ${webpStoragePath} avec le même token que l'original`);
     
     // Obtenir l'URL de téléchargement de la version WebP
     const webpFile = bucket.file(webpStoragePath);

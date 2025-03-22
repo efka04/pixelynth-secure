@@ -104,7 +104,23 @@ const ImageUploadForm = forwardRef(
           imageUrl = await getDownloadURL(originalImageRef);
     
           // 📌 Création de la version WebP
-    webpURL = imageUrl.replace(/\.(jpg|jpeg|png)/i, '.webp');
+// Essayer d'obtenir l'URL WebP, mais utiliser l'original en cas d'échec
+try {
+  // Extraire le nom du fichier de l'URL originale
+  const urlParts = imageUrl.split('/');
+  const originalFileName = urlParts[urlParts.length - 1].split('?')[0]; // Obtenir le nom sans paramètres
+  const webpFileName = originalFileName.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+  
+  // Créer une référence au fichier WebP
+  const webpImageRef = storageRef(firebaseStorage, `webp/${webpFileName}`);
+  
+  // Essayer d'obtenir l'URL WebP directement
+  webpURL = await getDownloadURL(webpImageRef);
+} catch (error) {
+  console.log("Version WebP non disponible, utilisation de l'original");
+  webpURL = imageUrl; // Fallback à l'image originale
+}
+
 
         }
     
