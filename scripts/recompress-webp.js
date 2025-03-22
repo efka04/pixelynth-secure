@@ -75,10 +75,10 @@ const processFile = async (file, tempDir) => {
       const image = sharp(tempFilePath);
       const imageMetadata = await image.metadata();
       
-      // Si la largeur est > 750px, redimensionner à 750px de largeur
-      if (imageMetadata.width > 750) {
-        console.log(`Redimensionnement de ${fileName} de ${imageMetadata.width}px à 750px de largeur.`);
-        image.resize({ width: 750, withoutEnlargement: true, fit: 'inside' });
+      // Si la largeur est > 650px, redimensionner à 650px de largeur
+      if (imageMetadata.width > 650) {
+        console.log(`Redimensionnement de ${fileName} de ${imageMetadata.width}px à 650px de largeur.`);
+        image.resize({ width: 650, withoutEnlargement: true, fit: 'inside' });
       }
       
       // Recompresser l'image avec Sharp en WebP
