@@ -168,11 +168,6 @@ export default function Photos({ userEmail }) {
     
     return (
         <div>
-            {/* Affichage du compteur de photos */}
-            <div className="mb-4 text-gray-700">
-                Total Photos: <span className="font-semibold">{photoCount}</span>
-            </div>
-            
             <ArticleList listPosts={photos} />
             {hasMore && <div ref={ref} style={{ height: '50px' }} />}
         </div>
