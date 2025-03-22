@@ -40,7 +40,7 @@ export default function PhotosContent({
       await deleteDoc(postRef);
       
       // Rediriger vers la page d'accueil
-      router.push('/');
+      router.back();
     } catch (error) {
       console.error('Error deleting post:', error);
       alert('Failed to delete the post. Please try again.');
