@@ -1,23 +1,44 @@
-"use client"
-import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
-import UploadImage from '@/app/components/uploadImage';
-import { useSession } from 'next-auth/react';
-import { getDownloadURL, getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
-import { app, db } from '@/app/db/firebaseConfig';
-import { doc, setDoc, addDoc, collection } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
-import NextImage from 'next/image';
-import CategorySelector from '@/app/components/form/CategorySelector';
-import ColorPicker from '@/app/components/form/ColorPicker';
-import PeopleOptions from '@/app/components/form/PeopleOptions';
-import TagsInput from '@/app/components/form/TagsInput';
-import { convertToJPG, createWebPVersion, determineOrientation } from '@/app/utils/ImageProcessing';
-import { enhanceImageDataWithTags } from '@/app/utils/tagExtraction';
 
 // Constants for validation
 const MAX_TITLE_LENGTH = 40;
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+// Nouvelle fonction pour compresser avec Sharp
+const compressWithSharp = async (file, maxWidth = 700) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Convertir le File en Buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      // Traiter l'image avec Sharp
+      const processedBuffer = await sharp(buffer)
+        .resize(maxWidth, null, {  // Largeur fixe, hauteur auto pour maintenir le ratio
+          withoutEnlargement: true,  // Ne pas agrandir si l'image est plus petite
+          fit: 'inside'
+        })
+        .webp({ 
+          quality: 85,
+          lossless: false,
+          effort: 6,
+          preset: 'photo'
+        })
+        .toBuffer();
+      
+      // Créer un nouveau File à partir du Buffer
+      const webpFile = new File(
+        [processedBuffer],
+        file.name.replace(/\.[^/.]+$/, ".webp"),
+        { type: 'image/webp' }
+      );
+      
+      resolve(webpFile);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 const ImageUploadForm = forwardRef(
   ({ initialFile = null, onClose, isBulkUpload = false, isEditing = false, existingData = null }, ref) => {
@@ -91,25 +112,23 @@ const ImageUploadForm = forwardRef(
             throw new Error(`File size exceeds maximum allowed (${MAX_FILE_SIZE / (1024 * 1024)}MB)`);
           }
           
-          let uploadFile = file;
-    
-          if (uploadFile.type === "image/png") {
-            uploadFile = await convertToJPG(uploadFile, 80);
-          }
-    
-          const originalFileName = `${Date.now()}-${uploadFile.name}`;
+          // Upload de l'image originale
+          const originalFileName = `${Date.now()}-${file.name}`;
           const originalImageRef = storageRef(firebaseStorage, `images/${originalFileName}`);
     
-          await uploadBytes(originalImageRef, uploadFile);
+          await uploadBytes(originalImageRef, file);
           imageUrl = await getDownloadURL(originalImageRef);
     
-          // 📌 Création de la version WebP
-          const webpFile = await createWebPVersion(uploadFile, 650, 75);
+          // 📌 Création de la version WebP avec Sharp
+          const webpFile = await compressWithSharp(file, 700);
           const webpFileName = originalFileName.replace(/\.[^/.]+$/, ".webp");
           const webpImageRef = storageRef(firebaseStorage, `webp/${webpFileName}`);
     
           await uploadBytes(webpImageRef, webpFile);
           webpURL = await getDownloadURL(webpImageRef);
+          
+          // Log de la taille pour vérification
+          console.log(`Image originale: ${file.size / 1024} KB, WebP compressé: ${webpFile.size / 1024} KB`);
         }
     
         if (!imageUrl && !isEditing) {
