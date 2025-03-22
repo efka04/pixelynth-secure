@@ -6,7 +6,7 @@ import { FaEdit, FaHeart, FaRegHeart, FaTrash, FaEllipsisV } from 'react-icons/f
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, runTransaction } from 'firebase/firestore';
 import { db } from '@/app/db/firebaseConfig';
 import dynamic from 'next/dynamic';
 import AddToCollectionButton from '@/app/components/collections/AddToCollectionButton';
@@ -36,10 +36,39 @@ export default function PhotosContent({
       // Référence au document à supprimer
       const postRef = doc(db, 'post', articleDetails.id);
       
-      // Supprimer le document
-      await deleteDoc(postRef);
+      // Référence au document utilisateur
+      const userEmail = articleDetails.userEmail;
+      if (userEmail) {
+        const userRef = doc(db, 'users', userEmail);
+        
+        // Utiliser une transaction pour garantir l'intégrité des données
+        await runTransaction(db, async (transaction) => {
+          // Obtenir les données actuelles de l'utilisateur
+          const userDoc = await transaction.get(userRef);
+          
+          if (userDoc.exists()) {
+            // Obtenir le nombre actuel de photos
+            const currentPhotoCount = userDoc.data().photoCount || 0;
+            
+            // Décrémenter le compteur (avec vérification pour éviter les valeurs négatives)
+            const newPhotoCount = Math.max(0, currentPhotoCount - 1);
+            
+            // Mettre à jour le document utilisateur
+            transaction.update(userRef, { 
+              photoCount: newPhotoCount,
+              updatedAt: new Date()
+            });
+          }
+          
+          // Supprimer le document de la photo
+          transaction.delete(postRef);
+        });
+      } else {
+        // Si pour une raison quelconque l'email n'est pas disponible, supprimer simplement la photo
+        await deleteDoc(postRef);
+      }
       
-      // Rediriger vers la page d'accueil
+      // Rediriger vers la page précédente
       router.back();
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -49,31 +78,30 @@ export default function PhotosContent({
 
   return (
     <>
- 
-        <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={() => router.back()}
-            className="flex gap-2 items-center hover:bg-gray-100 p-2 rounded-md"
-          >
-            <HiArrowSmallLeft className="text-2xl" />
-            <span>Back</span>
-          </button>
-          <div className="flex gap-2">
-            {articleDetails.userEmail && (
-          <div className="relative">
-            <button
-              onClick={() => setShowDropdown(prev => !prev)}
-              className="bg-white text-gray-700 p-2 rounded-md hover:bg-gray-100"
-              aria-label="Options"
-            >
-              <HiDotsHorizontal />
-            </button>
-            
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md z-10 border border-black">
-            <div className="py-1">
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={() => router.back()}
+          className="flex gap-2 items-center hover:bg-gray-100 p-2 rounded-md"
+        >
+          <HiArrowSmallLeft className="text-2xl" />
+          <span>Back</span>
+        </button>
+        <div className="flex gap-2">
+          {articleDetails.userEmail && (
+            <div className="relative">
               <button
-                onClick={() => {
+                onClick={() => setShowDropdown(prev => !prev)}
+                className="bg-white text-gray-700 p-2 rounded-md hover:bg-gray-100"
+                aria-label="Options"
+              >
+                <HiDotsHorizontal />
+              </button>
+              
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md z-10 border border-black">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
                         setShowDropdown(false);
                         handleEdit();
                       }}
@@ -104,8 +132,6 @@ export default function PhotosContent({
           )}
         </div>
       </div>
-
-       
 
       {/* Main Article Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -187,9 +213,9 @@ export default function PhotosContent({
               </div>
               <button
                 onClick={handleAddFavorite}
-                className={`px-4 py-2 rounded-md  ${
+                className={`px-4 py-2 rounded-md ${
                   isFavorite
-                    ? '  text-red-500'
+                    ? 'text-red-500'
                     : 'bg-white'
                 }`}
                 aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
