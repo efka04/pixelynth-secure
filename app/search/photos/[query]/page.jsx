@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import FilterBar from '../../../components/filterBar/FilterBar';
 import { useColor } from '@/app/context/ColorContext';
 import { useCategory } from '@/app/context/CategoryContext';
-import { getPostsPaginated } from '@/services/postsService';
+import { getEnhancedPostsPaginated } from '@/services/enhancedSearchService';
 
 export default function OptimizedSearchResults() {
     const { query } = useParams();
@@ -62,8 +62,8 @@ export default function OptimizedSearchResults() {
         }
         
         try {
-            // Use the same service as the home page to fetch filtered posts
-            const { posts: newPosts, lastVisible } = await getPostsPaginated(
+            // Utiliser le nouveau service de recherche amélioré avec système de points
+            const { posts: newPosts, lastVisible } = await getEnhancedPostsPaginated(
                 reset ? null : lastDoc,
                 24,
                 { 
