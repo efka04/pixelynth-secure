@@ -1,3 +1,4 @@
+// services/enhancedSearchService.js
 import { collection, query, orderBy, limit, startAfter, getDocs, where, or } from "firebase/firestore";
 import { db } from '../app/db/firebaseConfig';
 
@@ -24,7 +25,7 @@ export const splitSearchQuery = (query) => {
  * @param {object} filters - Filtres à appliquer (couleur, orientation, etc.)
  * @returns {Promise<{posts: Array, lastVisible: object}>} - Posts et dernier document visible
  */
-export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 20, filters = {}) {
+export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 24, filters = {}) {
   try {
     const postsRef = collection(db, "post");
     let constraints = [];
@@ -40,7 +41,7 @@ export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 20, f
       constraints.push(where("peopleCount", "==", Number(filters.selectedPeople)));
     }
     if (filters.selectedOrientation && filters.selectedOrientation !== "all") {
-      constraints.push(where("orientation", "==", filters.selectedOrientation));
+      constraints.push(where("orientation", "==", selectedOrientation));
     }
     if (filters.selectedCategory) {
       constraints.push(where("categories", "array-contains", filters.selectedCategory));
@@ -93,7 +94,8 @@ export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 20, f
       const post = {
         id: doc.id,
         ...data,
-        _score: 0 // Score initial
+        _score: 0, // Score initial
+        _exactMatchCount: 0 // Compteur de mots exacts trouvés
       };
       
       // Si nous avons des termes de recherche, calculer le score
@@ -104,34 +106,31 @@ export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 20, f
         const fullQuery = filters.searchQuery.toLowerCase();
         if (postTags.includes(fullQuery)) {
           post._score += 10; // Score élevé pour une correspondance exacte
+          post._exactMatchCount = searchTerms.length; // Tous les mots sont trouvés
+        } else {
+          // Compter combien de termes exacts sont présents dans les tags
+          searchTerms.forEach(term => {
+            if (postTags.includes(term)) {
+              post._score += 5;
+              post._exactMatchCount += 1; // Incrémenter le compteur de mots exacts
+            }
+          });
         }
-        
-        // Ajouter des points pour chaque terme individuel trouvé
-        searchTerms.forEach(term => {
-          if (postTags.includes(term)) {
-            post._score += 1;
-          }
-        });
-        
-        // Bonus pour les correspondances dans le titre
-        const lowercaseTitle = (data.lowercaseTitle || data.title || '').toLowerCase();
-        searchTerms.forEach(term => {
-          if (lowercaseTitle.includes(term)) {
-            post._score += 0.5;
-          }
-        });
-        
-        // Bonus pour les correspondances dans la description
-        const lowercaseDesc = (data.lowercaseDesc || data.desc || '').toLowerCase();
-        searchTerms.forEach(term => {
-          if (lowercaseDesc.includes(term)) {
-            post._score += 0.2;
-          }
-        });
       }
       
       return post;
     });
+    
+    // Filtrer les posts en fonction du nombre de mots dans la recherche
+    if (searchTerms.length > 0) {
+      if (searchTerms.length >= 2) {
+        // Pour 2 mots ou plus, exiger au moins 2 mots exacts dans les tags
+        posts = posts.filter(post => post._exactMatchCount >= 2);
+      } else {
+        // Pour 1 mot, exiger au moins 1 mot exact dans les tags
+        posts = posts.filter(post => post._exactMatchCount >= 1);
+      }
+    }
     
     // Trier par score si nous avons des termes de recherche et le tri est par pertinence
     if (searchTerms.length > 0 && filters.selectedSort === "relevance") {
