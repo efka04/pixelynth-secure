@@ -104,7 +104,7 @@ const ImageUploadForm = forwardRef(
           imageUrl = await getDownloadURL(originalImageRef);
     
           // 📌 Création de la version WebP
-          const webpFile = await createWebPVersion(uploadFile, 650, 90);
+          const webpFile = await createWebPVersion(uploadFile, 650, 100);
           const webpFileName = originalFileName.replace(/\.[^/.]+$/, ".webp");
           const webpImageRef = storageRef(firebaseStorage, `webp/${webpFileName}`);
     
