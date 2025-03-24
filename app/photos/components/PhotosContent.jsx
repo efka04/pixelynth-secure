@@ -1,111 +1,99 @@
-import React, { useState } from 'react';
+// Fichier: /app/photos/components/PhotosContent.jsx
+'use client';
+import React from 'react';
 import Link from 'next/link';
-import NextImage from 'next/image';
-import { HiArrowSmallLeft } from 'react-icons/hi2';
-import { FaEdit, FaHeart, FaRegHeart, FaTrash, FaEllipsisV } from 'react-icons/fa';
+import Image from 'next/image';
+import { FaHeart, FaRegHeart, FaEdit, FaTrash, FaEllipsisV } from 'react-icons/fa';
 import { MdOutlineFileDownload } from 'react-icons/md';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { doc, deleteDoc, runTransaction } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/app/db/firebaseConfig';
-import dynamic from 'next/dynamic';
+import DownloadButton from '@/app/components/DownloadButton';
 import AddToCollectionButton from '@/app/components/collections/AddToCollectionButton';
-import { categoryColors } from '@/app/utils/constants';
-import { HiDotsHorizontal } from 'react-icons/hi';
+import ArticleImage from '@/app/components/ArticleImage';
+import ArticleInfo from '@/app/components/ArticleInfo';
+import NextImage from 'next/image';
+import { categories as mainCategories } from '@/app/utils/constants';
 
-// Lazy-load non-critical UI components
-const ArticleImage = dynamic(() => import('@/app/components/ArticleImage'), { ssr: false });
-const ArticleInfo = dynamic(() => import('@/app/components/ArticleInfo'), { ssr: false });
-const DownloadButton = dynamic(() => import('@/app/components/DownloadButton'), { ssr: false });
+// Category colors for visual display
+const categoryColors = {
+  'Food': '#FFD700',
+  'Beauty': '#FF69B4',
+  'Fashion': '#00CED1',
+  'Travel': '#32CD32',
+  'Nature': '#7CFC00',
+  'Technology': '#1E90FF',
+  'Business': '#FF8C00',
+  'Health': '#FF6347',
+  'Education': '#9370DB',
+  'Sports': '#20B2AA',
+  'Art': '#FF4500',
+  'Music': '#BA55D3',
+  'Home': '#3CB371',
+  'Lifestyle': '#FF7F50',
+  'Animals': '#6495ED',
+};
 
 export default function PhotosContent({
   articleDetails,
   authorData,
-  isFavorite,
-  handleAddFavorite,
-  handleEdit,
+  isFavorite = false,
+  handleAddFavorite = () => {},
+  handleEdit = () => {},
 }) {
-  const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
   const { data: session } = useSession();
-  
+  const router = useRouter();
+
+  // Function to check if a category is a main category that should be indexed
+  const isMainCategory = (category) => {
+    return mainCategories.some(mainCat => 
+      mainCat.toLowerCase() === category.toLowerCase() || 
+      mainCat.toLowerCase().includes(category.toLowerCase()) ||
+      category.toLowerCase().includes(mainCat.toLowerCase())
+    );
+  };
+
   const handleDelete = async () => {
+    if (!session || session.user.email !== articleDetails.userEmail) {
+      return;
+    }
+
     try {
-      if (!articleDetails || !articleDetails.id) return;
-      
-      // Référence au document à supprimer
-      const postRef = doc(db, 'post', articleDetails.id);
-      
-      // Référence au document utilisateur
-      const userEmail = articleDetails.userEmail;
-      if (userEmail) {
-        const userRef = doc(db, 'users', userEmail);
-        
-        // Utiliser une transaction pour garantir l'intégrité des données
-        await runTransaction(db, async (transaction) => {
-          // Obtenir les données actuelles de l'utilisateur
-          const userDoc = await transaction.get(userRef);
-          
-          if (userDoc.exists()) {
-            // Obtenir le nombre actuel de photos
-            const currentPhotoCount = userDoc.data().photoCount || 0;
-            
-            // Décrémenter le compteur (avec vérification pour éviter les valeurs négatives)
-            const newPhotoCount = Math.max(0, currentPhotoCount - 1);
-            
-            // Mettre à jour le document utilisateur
-            transaction.update(userRef, { 
-              photoCount: newPhotoCount,
-              updatedAt: new Date()
-            });
-          }
-          
-          // Supprimer le document de la photo
-          transaction.delete(postRef);
-        });
-      } else {
-        // Si pour une raison quelconque l'email n'est pas disponible, supprimer simplement la photo
-        await deleteDoc(postRef);
-      }
-      
-      // Rediriger vers la page précédente
-      router.back();
+      await deleteDoc(doc(db, 'post', articleDetails.id));
+      router.push('/');
     } catch (error) {
-      console.error('Error deleting post:', error);
-      alert('Failed to delete the post. Please try again.');
+      console.error('Error deleting document:', error);
+      alert('Failed to delete the image. Please try again.');
     }
   };
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <button
-          onClick={() => router.back()}
-          className="flex gap-2 items-center hover:bg-gray-100 p-2 rounded-md"
-        >
-          <HiArrowSmallLeft className="text-2xl" />
-          <span>Back</span>
-        </button>
-        <div className="flex gap-2">
-          {articleDetails.userEmail && (
+      {/* Article Header */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          {/* Actions dropdown */}
+          {session && (
             <div className="relative">
               <button
-                onClick={() => setShowDropdown(prev => !prev)}
-                className="bg-white text-gray-700 p-2 rounded-md hover:bg-gray-100"
-                aria-label="Options"
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="p-2 rounded-full hover:bg-gray-100"
+                aria-label="More options"
               >
-                <HiDotsHorizontal />
+                <FaEllipsisV className="text-gray-500" />
               </button>
-              
               {showDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md z-10 border border-black">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                   <div className="py-1">
                     <button
                       onClick={() => {
                         setShowDropdown(false);
                         handleEdit();
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 flex items-center gap-2"
+                      className="w-full text-left hover:bg-gray-100 px-4 py-2 text-sm text-gray-700 flex items-center gap-2"
                     >
                       <FaEdit className="text-black" />
                       <span>Edit</span>
@@ -132,7 +120,6 @@ export default function PhotosContent({
           )}
         </div>
       </div>
-
       {/* Main Article Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ArticleImage articleId={articleDetails.id} articleDetails={articleDetails} />
@@ -163,6 +150,8 @@ export default function PhotosContent({
               <div className="flex gap-1 flex-wrap">
                 {articleDetails.categories.map((category, index) => {
                   const color = categoryColors[category] || '#CCCCCC';
+                  // Only add nofollow if it's not a main category
+                  const shouldNofollow = !isMainCategory(category);
                   return (
                     <Link
                       key={index}
@@ -173,6 +162,7 @@ export default function PhotosContent({
                         color: 'black',
                         fontWeight: 300,
                       }}
+                      {...(shouldNofollow ? { rel: "nofollow" } : {})}
                     >
                       {category}
                     </Link>

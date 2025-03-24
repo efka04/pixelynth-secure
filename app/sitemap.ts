@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from './db/firebaseConfig';
 import fs from 'fs';
 import path from 'path';
@@ -105,15 +105,16 @@ function generateStaticRoutes(): SitemapEntry[] {
   ];
 }
 
-function generateTagEntries(uniqueTags: Set<string>, tagCounts: Map<string, number>): SitemapEntry[] {
-  // Filtrer pour ne garder que les tags avec plus de 10 photos
+// Générer les entrées pour les pages de recherche avec plus de 30 photos
+function generateSearchEntries(uniqueTags: Set<string>, tagCounts: Map<string, number>): SitemapEntry[] {
+  // Filtrer pour ne garder que les tags avec plus de 30 photos
   return Array.from(uniqueTags)
-    .filter(tag => (tagCounts.get(tag) || 0) >= 10)
+    .filter(tag => (tagCounts.get(tag) || 0) >= 100)
     .map(tag => ({
-      url: `https://pixelynth.com/tag/${encodeURIComponent(tag)}`,
+      url: `https://pixelynth.com/search/photos/${encodeURIComponent(tag)}`,
       lastModified: new Date().toISOString(),
       changeFrequency: 'weekly' as ChangeFrequency,
-      priority: 0.5
+      priority: 0.8 // Priorité plus élevée que les pages normales
     }));
 }
 
@@ -122,23 +123,22 @@ async function createSitemaps() {
 
   const { entries: postEntries, uniqueTags, tagCounts } = await fetchPosts();
   const blogEntries = await fetchBlogs();
+  const searchEntries = generateSearchEntries(uniqueTags, tagCounts);
 
   console.log(`Generated ${postEntries.length} post entries`);
   console.log(`Generated ${blogEntries.length} blog entries`);
+  console.log(`Generated ${searchEntries.length} search entries (filtered to include only tags with 30+ photos)`);
 
   const staticEntries = generateStaticRoutes();
-  const tagEntries = generateTagEntries(uniqueTags, tagCounts);
   
-  console.log(`Generated ${tagEntries.length} tag entries (filtered to include only tags with 10+ photos)`);
-
   const postsXML = generateSitemapXML(postEntries);
   const blogsXML = generateSitemapXML(blogEntries);
-  const tagsXML = generateSitemapXML(tagEntries);
+  const searchXML = generateSitemapXML(searchEntries);
   const staticXML = generateSitemapXML(staticEntries);
 
   fs.writeFileSync(path.join(publicDir, 'sitemap-posts.xml'), postsXML);
   fs.writeFileSync(path.join(publicDir, 'sitemap-blogs.xml'), blogsXML);
-  fs.writeFileSync(path.join(publicDir, 'sitemap-tags.xml'), tagsXML);
+  fs.writeFileSync(path.join(publicDir, 'sitemap-search.xml'), searchXML);
   fs.writeFileSync(path.join(publicDir, 'sitemap-static.xml'), staticXML);
 
   const today = new Date().toISOString().split('T')[0];
@@ -153,7 +153,7 @@ async function createSitemaps() {
     <lastmod>${today}</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://pixelynth.com/sitemap-tags.xml</loc>
+    <loc>https://pixelynth.com/sitemap-search.xml</loc>
     <lastmod>${today}</lastmod>
   </sitemap>
   <sitemap>
