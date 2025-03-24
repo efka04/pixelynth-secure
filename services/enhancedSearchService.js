@@ -3,19 +3,51 @@ import { collection, query, orderBy, limit, startAfter, getDocs, where, or } fro
 import { db } from '../app/db/firebaseConfig';
 
 /**
- * Divise une requête de recherche en termes individuels
+ * Divise une requête de recherche en termes individuels et génère leurs variantes (pluriels/singuliers)
  * @param {string} query - Requête de recherche complète
- * @returns {Array} - Tableau de termes individuels
+ * @returns {Array} - Tableau de termes individuels et leurs variantes
  */
 export const splitSearchQuery = (query) => {
   if (!query || typeof query !== 'string') return [];
   
   // Normaliser la requête et la diviser en mots
-  return query
+  const terms = query
     .trim()
     .toLowerCase()
     .split(/\s+/)
     .filter(term => term.length > 0);
+  
+  // Générer les variantes (singulier/pluriel) pour chaque terme
+  const termsWithVariants = [];
+  const processedTerms = new Set(); // Pour éviter les doublons
+  
+  terms.forEach(term => {
+    // Ajouter le terme original s'il n'est pas déjà traité
+    if (!processedTerms.has(term)) {
+      termsWithVariants.push(term);
+      processedTerms.add(term);
+      
+      // Générer et ajouter le pluriel si le terme se termine par une consonne
+      if (!term.endsWith('s')) {
+        const plural = term + 's';
+        termsWithVariants.push(plural);
+        processedTerms.add(plural);
+      }
+      // Générer et ajouter le singulier si le terme se termine par 's'
+      else if (term.length > 1 && term.endsWith('s')) {
+        const singular = term.slice(0, -1);
+        if (singular.length > 1) { // Éviter les termes trop courts
+          termsWithVariants.push(singular);
+          processedTerms.add(singular);
+        }
+      }
+    }
+  });
+  
+  return {
+    originalTerms: terms,           // Termes originaux de la recherche
+    allTerms: termsWithVariants     // Tous les termes avec leurs variantes
+  };
 };
 
 /**
@@ -41,20 +73,20 @@ export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 24, f
       constraints.push(where("peopleCount", "==", Number(filters.selectedPeople)));
     }
     if (filters.selectedOrientation && filters.selectedOrientation !== "all") {
-      constraints.push(where("orientation", "==", selectedOrientation));
+      constraints.push(where("orientation", "==", filters.selectedOrientation));
     }
     if (filters.selectedCategory) {
       constraints.push(where("categories", "array-contains", filters.selectedCategory));
     }
     
     // Traitement spécial pour la recherche
-    let searchTerms = [];
+    let searchTermsInfo = { originalTerms: [], allTerms: [] };
     if (filters.searchQuery) {
-      searchTerms = splitSearchQuery(filters.searchQuery);
+      searchTermsInfo = splitSearchQuery(filters.searchQuery);
       
-      // Si nous avons des termes de recherche, créer une condition OR pour chaque terme
-      if (searchTerms.length > 0) {
-        const tagConditions = searchTerms.map(term => 
+      // Si nous avons des termes de recherche, créer une condition OR pour chaque terme et ses variantes
+      if (searchTermsInfo.allTerms.length > 0) {
+        const tagConditions = searchTermsInfo.allTerms.map(term => 
           where("tags", "array-contains", term)
         );
         
@@ -95,45 +127,56 @@ export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 24, f
         id: doc.id,
         ...data,
         _score: 0, // Score initial
-        _exactMatchCount: 0 // Compteur de mots exacts trouvés
+        _exactMatchCount: 0, // Compteur de mots exacts trouvés (termes originaux uniquement)
+        _matchedTerms: new Set() // Ensemble des termes originaux qui ont été trouvés
       };
       
       // Si nous avons des termes de recherche, calculer le score
-      if (searchTerms.length > 0) {
+      if (searchTermsInfo.originalTerms.length > 0) {
         const postTags = (data.tags || []).map(tag => tag.toLowerCase());
         
         // Vérifier la correspondance exacte avec la requête complète
         const fullQuery = filters.searchQuery.toLowerCase();
         if (postTags.includes(fullQuery)) {
           post._score += 10; // Score élevé pour une correspondance exacte
-          post._exactMatchCount = searchTerms.length; // Tous les mots sont trouvés
+          // Tous les termes originaux sont considérés comme trouvés
+          searchTermsInfo.originalTerms.forEach(term => post._matchedTerms.add(term));
         } else {
-          // Compter combien de termes exacts sont présents dans les tags
-          searchTerms.forEach(term => {
-            if (postTags.includes(term)) {
-              post._score += 5;
-              post._exactMatchCount += 1; // Incrémenter le compteur de mots exacts
-            }
+          // Pour chaque tag, vérifier s'il correspond à un terme original ou sa variante
+          postTags.forEach(tag => {
+            // Vérifier chaque terme original
+            searchTermsInfo.originalTerms.forEach(originalTerm => {
+              // Si le tag correspond exactement au terme original ou à sa variante
+              if (tag === originalTerm || 
+                  (originalTerm + 's' === tag) || 
+                  (originalTerm.endsWith('s') && originalTerm.slice(0, -1) === tag)) {
+                post._score += 5;
+                post._matchedTerms.add(originalTerm);
+              }
+            });
           });
         }
+        
+        // Mettre à jour le compteur de mots exacts trouvés
+        post._exactMatchCount = post._matchedTerms.size;
       }
       
       return post;
     });
     
     // Filtrer les posts en fonction du nombre de mots dans la recherche
-    if (searchTerms.length > 0) {
-      if (searchTerms.length >= 2) {
-        // Pour 2 mots ou plus, exiger au moins 2 mots exacts dans les tags
+    if (searchTermsInfo.originalTerms.length > 0) {
+      if (searchTermsInfo.originalTerms.length >= 2) {
+        // Pour 2 mots ou plus, exiger au moins 2 mots exacts (ou leurs variantes) dans les tags
         posts = posts.filter(post => post._exactMatchCount >= 2);
       } else {
-        // Pour 1 mot, exiger au moins 1 mot exact dans les tags
+        // Pour 1 mot, exiger au moins 1 mot exact (ou sa variante) dans les tags
         posts = posts.filter(post => post._exactMatchCount >= 1);
       }
     }
     
     // Trier par score si nous avons des termes de recherche et le tri est par pertinence
-    if (searchTerms.length > 0 && filters.selectedSort === "relevance") {
+    if (searchTermsInfo.originalTerms.length > 0 && filters.selectedSort === "relevance") {
       posts.sort((a, b) => b._score - a._score);
     }
     
