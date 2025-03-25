@@ -5,8 +5,34 @@ const nextConfig: NextConfig = {
     domains: ["lh3.googleusercontent.com", "firebasestorage.googleapis.com"],
     unoptimized: true,
   },
+  
   async redirects() {
     return [
+      {
+        source: '/animal/:slug',
+        destination: '/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/tag/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/tag/:slug',
+        destination: '/search/photo-category/:slug',
+        permanent: true,
+      },
+      {
+        source: '/photo-tag/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/technology/:slug',
+        destination: '/photos/:slug',
+        permanent: true,
+      },
       {
         source: "/photo/fashion-design-streetwear-3",
         destination: "/photos/Fashion-design-streetwear-2-hQ52YzrEkzUKaz3Ip3Qh",
@@ -114,5 +140,3 @@ const nextConfig: NextConfig = {
   // If you have rewrites or redirects, make sure they don't conflict with unmatched routes
 };
 export default nextConfig;
-
-

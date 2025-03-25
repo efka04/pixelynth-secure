@@ -35,11 +35,14 @@ export default function OptimizedSearchResults() {
     // Decode query parameter
     useEffect(() => {
         if (query) {
-            const decoded = decodeURIComponent(query);
-            setDecodedQuery(decoded);
-            performSearch(decoded);
+          // Première étape : décoder l'URL
+          let decoded = decodeURIComponent(query);
+          // Deuxième étape : remplacer les tirets par des espaces
+          decoded = decoded.replace(/-/g, ' ');
+          setDecodedQuery(decoded);
+          performSearch(decoded);
         }
-    }, [query, performSearch]);
+      }, [query, performSearch]);
 
     // Update active filters list for better user feedback
     useEffect(() => {
