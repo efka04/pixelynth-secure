@@ -1,52 +1,61 @@
-import { collection, query, orderBy, limit, startAfter, getDocs, where } from "firebase/firestore";
+import { collection, query, orderBy, limit, startAfter, getDocs, where, and } from "firebase/firestore";
 import { db } from '../app/db/firebaseConfig';
 
 export async function getPostsPaginated(lastDoc = null, pageSize = 20, filters = {}) {
-  let q = collection(db, "post");
-
-  let constraints = [];
+  const postsRef = collection(db, "post");
+  
+  // Séparer les contraintes de filtrage des autres contraintes
+  let filterConstraints = [];
+  let otherConstraints = [];
 
   // 🔍 DEBUG: Vérifier le tri sélectionné
   console.log("Fetching posts with sort:", filters.selectedSort);
 
   // Appliquer le tri en fonction de `selectedSort`
   if (filters.selectedSort === "newest") {
-    constraints.push(orderBy("timestamp", "desc")); // Trier uniquement par date
+    otherConstraints.push(orderBy("timestamp", "desc")); // Trier uniquement par date
   } else if (filters.selectedSort === "popular") {
-    constraints.push(orderBy("downloadCount", "desc")); // Trier par le nombre de téléchargements
+    otherConstraints.push(orderBy("downloadCount", "desc")); // Trier par le nombre de téléchargements
   } else {
-    constraints.push(orderBy("highlight", "desc"), orderBy("timestamp", "desc")); // Par défaut (relevance)
+    otherConstraints.push(orderBy("highlight", "desc"), orderBy("timestamp", "desc")); // Par défaut (relevance)
   }
 
   // Filtrer les résultats selon les critères sélectionnés
   if (filters.userEmail) {
-    constraints.push(where("userEmail", "==", filters.userEmail));
+    filterConstraints.push(where("userEmail", "==", filters.userEmail));
   }
   if (filters.selectedColor) {
-    constraints.push(where("color", "==", filters.selectedColor));
+    filterConstraints.push(where("color", "==", filters.selectedColor));
   }
   if (filters.selectedPeople && filters.selectedPeople !== "all") {
-    constraints.push(where("peopleCount", "==", Number(filters.selectedPeople)));
+    filterConstraints.push(where("peopleCount", "==", Number(filters.selectedPeople)));
   }
   if (filters.selectedOrientation && filters.selectedOrientation !== "all") {
-    constraints.push(where("orientation", "==", filters.selectedOrientation));
+    filterConstraints.push(where("orientation", "==", filters.selectedOrientation));
   }
   if (filters.selectedCategory) {
-    constraints.push(where("categories", "array-contains", filters.selectedCategory));
+    filterConstraints.push(where("categories", "array-contains", filters.selectedCategory));
   }
   
   // Ajouter le filtre de recherche si présent
   if (filters.searchQuery) {
-    constraints.push(where("tags", "array-contains", filters.searchQuery.toLowerCase()));
+    filterConstraints.push(where("tags", "array-contains", filters.searchQuery.toLowerCase()));
   }
 
   if (lastDoc) {
-    constraints.push(startAfter(lastDoc));
+    otherConstraints.push(startAfter(lastDoc));
   }
   
-  constraints.push(limit(pageSize));
+  otherConstraints.push(limit(pageSize));
   
-  const qFinal = query(q, ...constraints);
+  // Construire la requête finale avec and() pour les filtres
+  let qFinal;
+  if (filterConstraints.length > 0) {
+    qFinal = query(postsRef, and(...filterConstraints), ...otherConstraints);
+  } else {
+    qFinal = query(postsRef, ...otherConstraints);
+  }
+  
   const snapshot = await getDocs(qFinal);
   const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   const lastVisible = snapshot.docs[snapshot.docs.length - 1];

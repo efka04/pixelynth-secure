@@ -1,5 +1,5 @@
 // services/enhancedSearchService.js
-import { collection, query, orderBy, limit, startAfter, getDocs, where, or } from "firebase/firestore";
+import { collection, query, orderBy, limit, startAfter, getDocs, where, or, and } from "firebase/firestore";
 import { db } from '../app/db/firebaseConfig';
 
 /**
@@ -60,23 +60,24 @@ export const splitSearchQuery = (query) => {
 export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 24, filters = {}) {
   try {
     const postsRef = collection(db, "post");
-    let constraints = [];
+    let filterConstraints = [];
+    let otherConstraints = [];
     
     // Appliquer les filtres standards
     if (filters.userEmail) {
-      constraints.push(where("userEmail", "==", filters.userEmail));
+      filterConstraints.push(where("userEmail", "==", filters.userEmail));
     }
     if (filters.selectedColor) {
-      constraints.push(where("color", "==", filters.selectedColor));
+      filterConstraints.push(where("color", "==", filters.selectedColor));
     }
     if (filters.selectedPeople && filters.selectedPeople !== "all") {
-      constraints.push(where("peopleCount", "==", Number(filters.selectedPeople)));
+      filterConstraints.push(where("peopleCount", "==", Number(filters.selectedPeople)));
     }
     if (filters.selectedOrientation && filters.selectedOrientation !== "all") {
-      constraints.push(where("orientation", "==", filters.selectedOrientation));
+      filterConstraints.push(where("orientation", "==", filters.selectedOrientation));
     }
     if (filters.selectedCategory) {
-      constraints.push(where("categories", "array-contains", filters.selectedCategory));
+      filterConstraints.push(where("categories", "array-contains", filters.selectedCategory));
     }
     
     // Traitement spécial pour la recherche
@@ -92,32 +93,38 @@ export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 24, f
         
         // Ajouter la condition OR aux contraintes
         if (tagConditions.length === 1) {
-          constraints.push(tagConditions[0]);
+          filterConstraints.push(tagConditions[0]);
         } else if (tagConditions.length > 1) {
-          constraints.push(or(...tagConditions));
+          filterConstraints.push(or(...tagConditions));
         }
       }
     }
     
     // Appliquer le tri en fonction de `selectedSort`
     if (filters.selectedSort === "newest") {
-      constraints.push(orderBy("timestamp", "desc"));
+      otherConstraints.push(orderBy("timestamp", "desc"));
     } else if (filters.selectedSort === "popular") {
-      constraints.push(orderBy("downloadCount", "desc"));
+      otherConstraints.push(orderBy("downloadCount", "desc"));
     } else {
-      constraints.push(orderBy("highlight", "desc"), orderBy("timestamp", "desc"));
+      otherConstraints.push(orderBy("highlight", "desc"), orderBy("timestamp", "desc"));
     }
     
     // Pagination
     if (lastDoc) {
-      constraints.push(startAfter(lastDoc));
+      otherConstraints.push(startAfter(lastDoc));
     }
     
     // Récupérer plus de résultats que nécessaire pour le scoring
-    constraints.push(limit(pageSize * 3));
+    otherConstraints.push(limit(pageSize * 3));
     
-    // Exécuter la requête
-    const qFinal = query(postsRef, ...constraints);
+    // Exécuter la requête avec and() pour les filtres
+    let qFinal;
+    if (filterConstraints.length > 0) {
+      qFinal = query(postsRef, and(...filterConstraints), ...otherConstraints);
+    } else {
+      qFinal = query(postsRef, ...otherConstraints);
+    }
+    
     const snapshot = await getDocs(qFinal);
     
     // Transformer les documents en objets avec des scores

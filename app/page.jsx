@@ -4,11 +4,9 @@ import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useSearch } from '@/app/context/OptimizedSearchContext';
 import { CategoryProvider } from '@/app/context/CategoryContext';
-import FilterBar from '@/app/components/filterBar/FilterBar';
 import CategoryBar from '@/app/components/CategoryBar';
 import TopContributors from '@/app/components/TopContributors'; // Import TopContributors component
-import PostsPage from '@/app/posts/page';
-import { useRouter } from 'next/router'; // Import useRouter
+import PostsGrid from '@/app/components/PostsGrid';
 import { usePathname } from 'next/navigation'; // Import usePathname
 
 // Import dynamique d'ArticleList avec Suspense
@@ -64,8 +62,9 @@ export default function RootPage() {
             <div className="mb-4">
             </div>
             <Suspense fallback={<div></div>}>
-              <PostsPage listPosts={searchResults} selectedPeople={selectedPeople} />
+                <PostsGrid listPosts={searchResults} selectedPeople={selectedPeople} />
             </Suspense>
+
           </div>
         </div>
       </main>
