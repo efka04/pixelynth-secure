@@ -9,30 +9,37 @@ export default function SignIn() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        setError('')
-        setLoading(true)
+  // Remplacer la fonction handleSubmit existante
+const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
-        try {
-            const result = await signIn('credentials', {
-                redirect: false,
-                email,
-                password,
-                callbackUrl: '/' // Use relative URL instead of process.env.NEXTAUTH_URL
-            })
+    try {
+        const result = await signIn('credentials', {
+            redirect: false,
+            email,
+            password,
+            callbackUrl: '/'
+        })
 
-            if (result.error) {
-                setError('Invalid email or password')
-            } else {
-                window.location.href = result.url
-            }
-        } catch (error) {
-            setError('An unexpected error occurred')
-        } finally {
-            setLoading(false)
+        if (result.error) {
+            // Message d'erreur générique sans détails spécifiques
+            setError('Invalid email or password')
+        } else {
+            window.location.href = result.url
         }
+    } catch (error) {
+        // Message d'erreur générique sans exposer les détails techniques
+        setError('An unexpected error occurred')
+        
+        // Logger l'erreur de manière sécurisée (sans exposer les détails sensibles)
+        console.error('Authentication error occurred')
+    } finally {
+        setLoading(false)
     }
+}
+
 
     return (
         <div className="flex flex-col items-center justify-center h-full bg-white py-[15%]">

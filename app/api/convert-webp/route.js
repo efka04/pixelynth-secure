@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getStorage } from 'firebase-admin/storage';
 import { cert, initializeApp, getApps } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 const serviceAccount = {
     "type": "service_account",
@@ -23,31 +24,83 @@ if (!getApps().length) {
   });
 }
 
+if (!getApps().length) {
+  initializeApp({
+    credential: cert(serviceAccount),
+    storageBucket: 'pixelynth-c41ea.appspot.com'
+  });
+}
+
 const bucket = getStorage().bucket();
 
-export async function POST(request) {
-    try {
-        const { file, filename } = await request.json();
+// Fonction de validation du format base64
+function isValidBase64Image(base64String) {
+  // Vérifier le format de base64 pour les images
+  const regex = /^data:image\/(jpeg|png|webp|gif);base64,([A-Za-z0-9+/=])+$/;
+  return regex.test(base64String);
+}
 
-        // Convert base64 to buffer
-        const buffer = Buffer.from(file.split(',')[1], 'base64');
-        
-        // Upload to Firebase Storage
-        const webpPath = `webp/${filename}.webp`;
-        const webpFile = bucket.file(webpPath);
-        
-        await webpFile.save(buffer, {
-            metadata: {
-                contentType: 'image/webp',
-            }
-        });
-
-        await webpFile.makePublic();
-        const webpUrl = await webpFile.publicUrl();
-
-        return NextResponse.json({ url: webpUrl });
-    } catch (error) {
-        console.error('WebP conversion error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+// Fonction pour vérifier l'authentification
+async function verifyAuth(request) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
     }
+    
+    const token = authHeader.split(' ')[1];
+    const auth = getAuth();
+    const decodedToken = await auth.verifyIdToken(token);
+    return decodedToken;
+  } catch (error) {
+    console.error('Auth verification error:', error);
+    return null;
+  }
+}
+export async function POST(request) {
+  try {
+    // Vérifier l'authentification
+    const user = await verifyAuth(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const { file, filename } = await request.json();
+    
+    // Valider le format base64
+    if (!file || !filename || !isValidBase64Image(file)) {
+      return NextResponse.json({ error: 'Invalid image format' }, { status: 400 });
+    }
+    
+    // Limiter la taille du fichier (approximativement 5MB en base64)
+    if (file.length > 7000000) {
+      return NextResponse.json({ error: 'File too large' }, { status: 400 });
+    }
+    
+    // Convertir base64 en buffer
+    const buffer = Buffer.from(file.split(',')[1], 'base64');
+    
+    // Générer un nom de fichier sécurisé
+    const safeFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const webpPath = `webp/${user.uid}_${Date.now()}_${safeFilename}.webp`;
+    const webpFile = bucket.file(webpPath);
+    
+    await webpFile.save(buffer, {
+      metadata: {
+        contentType: 'image/webp',
+      }
+    });
+    
+    // Définir des règles d'accès au lieu de rendre le fichier public
+    // Remplacer makePublic() par une URL signée avec expiration
+    const [url] = await webpFile.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 1 semaine
+    });
+    
+    return NextResponse.json({ url });
+  } catch (error) {
+    console.error('WebP conversion error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

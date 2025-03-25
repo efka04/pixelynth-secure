@@ -68,7 +68,7 @@ export default function CategoryBar({ className, isSticky }) {
     return (
         <div
             className={`relative bg-white -translate-y-2 mb-0 ${
-                isSticky ? 'sticky top-[61px] z-50' : ''
+                isSticky ? 'sticky top-[61px] z-30' : ''
             }`} // Adjust top to match header height
         >
             <button

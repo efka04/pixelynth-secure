@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { convertFromRaw } from 'draft-js';
 import '../components/RichTextEditor.css';
+import DOMPurify from 'dompurify';
 
 const ArticleContent = ({ content }) => {
   const twitterLoaded = useRef(false);
@@ -109,11 +110,11 @@ const ArticleContent = ({ content }) => {
         // For embeds with HTML already
         return (
           <div 
-            key={block.getKey()}
-            id={embedId}
-            className="twitter-embed-container"
-            dangerouslySetInnerHTML={{ __html: blockText }}
-          />
+          key={block.getKey()}
+          id={embedId}
+          className="twitter-embed-container"
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blockText) }}
+        />
         );
       }
       

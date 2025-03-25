@@ -13,6 +13,7 @@ import PeopleOptions from '@/app/components/form/PeopleOptions';
 import TagsInput from '@/app/components/form/TagsInput';
 import { convertToJPG, createWebPVersion, determineOrientation } from '@/app/utils/ImageProcessing';
 import { enhanceImageDataWithTags } from '@/app/utils/tagExtraction';
+import { validateImageData, sanitizeImageData } from '@/app/utils/validation';
 
 // Constants for validation
 const MAX_TITLE_LENGTH = 40;
@@ -138,6 +139,9 @@ const ImageUploadForm = forwardRef(
           copyrightAgreement: true, // Store the copyright agreement status
         };
         
+            // Sanitiser les données avant de les envoyer
+        imageData = sanitizeImageData(imageData);
+
         // Extraire des tags supplémentaires à partir du titre et de la description
         imageData = enhanceImageDataWithTags(imageData);
     
