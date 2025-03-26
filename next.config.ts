@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/animal/:slug',
-        destination: '/photos/:slug',
+        destination: '/search/photos/:slug',
         permanent: true,
       },
       {
