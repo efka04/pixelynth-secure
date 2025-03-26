@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { getArticleBySlug, deleteArticle } from '@/services/firebaseService';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { convertFromRaw } from 'draft-js';
 import { convertToHTML } from 'draft-convert';
 import { auth } from '@/app/db/firebaseConfig';

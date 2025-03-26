@@ -20,13 +20,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pixelynth - Free AI-Generated Stock Images for commercial use",
-  description: "Discover and download high-quality AI-generated stock images for free. Browse through categories like Food, Beauty, Fashion, and more. Start exploring now!",
   keywords: "AI images, stock photos, free images, artificial intelligence, digital art, stock images, AI generated images, AI pictures, royalty-free, commercial use",
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
 };
+
 const schemaMarkup = {
   "@context": "http://schema.org",
   "@type": "WebSite",

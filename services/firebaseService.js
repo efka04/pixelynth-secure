@@ -194,3 +194,28 @@ export async function deleteArticle(id) {
     throw error;
   }
 }
+
+export async function getPostBySlug(slug) {
+  try {
+    if (!db) throw new Error('Firestore is not initialized');
+    
+    const postsRef = collection(db, 'posts'); // ou 'images' ou autre collection appropriée
+    const q = query(postsRef, where('slug', '==', slug));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) return null;
+
+    const doc = querySnapshot.docs[0];
+    const data = doc.data();
+    
+    return {
+      id: doc.id,
+      ...data,
+      createdAt: data.createdAt?.toDate(),
+      updatedAt: data.updatedAt?.toDate(),
+    };
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    return null;
+  }
+}
