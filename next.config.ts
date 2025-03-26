@@ -9,13 +9,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/animal/:slug',
-        destination: '/search/photos/:slug',
-        permanent: true,
-      },
-      {
         source: '/photo/:slug',
-        destination: '/photos/:slug',
+        destination: '/search/photos/:slug',
         permanent: true,
       },
       {
