@@ -1,6 +1,4 @@
 // Fichier: /app/photos/[slug]/page.jsx
-// Notez l'absence de 'use client' - c'est un composant serveur
-
 import React from 'react';
 import { db } from '@/app/db/firebaseConfig';
 import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
@@ -9,6 +7,17 @@ import SimilarPosts from '@/app/photos/components/SimilarPosts';
 import { notFound } from 'next/navigation';
 import ClientInteractivity from '@/app/photos/components/ClientInteractivity';
 
+// Fonction utilitaire pour sérialiser les timestamps ou objets complexes
+function serializeTimestamp(ts) {
+  if (ts && typeof ts === 'object' && 'seconds' in ts && 'nanoseconds' in ts) {
+    return {
+      seconds: ts.seconds,
+      nanoseconds: ts.nanoseconds
+    };
+  }
+  return ts;
+}
+
 // Fonction pour sérialiser les objets complexes
 function serializeData(obj) {
   if (!obj) return null;
@@ -16,30 +25,19 @@ function serializeData(obj) {
   // Créer une copie de l'objet
   const serialized = { ...obj };
   
-  // Sérialiser les timestamps
-  if (serialized.timestamp && typeof serialized.timestamp === 'object') {
-    serialized.timestamp = {
-      seconds: serialized.timestamp.seconds,
-      nanoseconds: serialized.timestamp.nanoseconds
-    };
+  // Sérialiser les champs de type timestamp ou objets complexes
+  if (serialized.timestamp) {
+    serialized.timestamp = serializeTimestamp(serialized.timestamp);
   }
-  
-  if (serialized.createdAt && typeof serialized.createdAt === 'object') {
-    serialized.createdAt = {
-      seconds: serialized.createdAt.seconds,
-      nanoseconds: serialized.createdAt.nanoseconds
-    };
+  if (serialized.createdAt) {
+    serialized.createdAt = serializeTimestamp(serialized.createdAt);
   }
-  
-  // Sérialiser updatedAt si présent
-  if (serialized.updatedAt && typeof serialized.updatedAt === 'object') {
-    serialized.updatedAt = {
-      seconds: serialized.updatedAt.seconds,
-      nanoseconds: serialized.updatedAt.nanoseconds
-    };
+  if (serialized.updatedAt) {
+    serialized.updatedAt = serializeTimestamp(serialized.updatedAt);
   }
-  
-  // Sérialiser d'autres champs complexes si nécessaire
+  if (serialized.statsLastUpdated) {
+    serialized.statsLastUpdated = serializeTimestamp(serialized.statsLastUpdated);
+  }
   
   return serialized;
 }

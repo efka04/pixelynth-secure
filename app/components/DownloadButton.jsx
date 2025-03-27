@@ -72,7 +72,7 @@ const DownloadButton = ({ item, variant }) => {
           downloadedAt: new Date(),
           imageURL: imageUrl,
         });
-        console.log('✅ Action de téléchargement enregistrée dans l’historique');
+        console.log('✅ Action de téléchargement enregistrée dans lhistorique');
       } else {
         console.log('Utilisateur non authentifié, historique non mis à jour');
       }
@@ -91,4 +91,5 @@ const DownloadButton = ({ item, variant }) => {
   );
 };
 
-export default React.memo(DownloadButton);
+// Ajout de l'export default manquant
+export default DownloadButton;

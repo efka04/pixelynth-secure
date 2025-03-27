@@ -96,5 +96,3 @@ const ArticleItem = ({ item, priority, loading, index }) => {
   );
 };
 export default memo(ArticleItem);
-
-// Memoize the ArticleItem component to prevent unnecessary re-renders

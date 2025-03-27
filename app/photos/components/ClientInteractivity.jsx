@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/app/db/firebaseConfig';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 
 export default function ClientInteractivity({ articleId, children }) {
   const { data: session } = useSession();
@@ -51,12 +51,35 @@ export default function ClientInteractivity({ articleId, children }) {
     checkIfFavorite();
   }, [session, articleId]);
 
+  // Incrémenter le compteur de vues
+  useEffect(() => {
+    const incrementView = async () => {
+      if (!articleId) return;
+      
+      try {
+        // Utiliser l'API route pour incrémenter le compteur de vues
+        await fetch('/api/views/increment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photoId: articleId })
+        });
+      } catch (error) {
+        console.error('Error incrementing view count:', error);
+      }
+    };
+    
+    incrementView();
+  }, [articleId]);
+
   // Fonction pour basculer l'état favori d'un article
   const toggleFavorite = async (userEmail, articleId, articleInfo) => {
     try {
       const favoritesRef = collection(db, 'users', userEmail, 'favorites');
       const favQuery = query(favoritesRef, where('articleId', '==', articleId));
       const querySnapshot = await getDocs(favQuery);
+      
+      // Référence au document de la photo pour mettre à jour le compteur de likes
+      const postRef = doc(db, 'post', articleId);
       
       if (querySnapshot.empty) {
         // Ajouter aux favoris
@@ -65,11 +88,23 @@ export default function ClientInteractivity({ articleId, children }) {
           timestamp: serverTimestamp(),
           ...articleInfo
         });
+        
+        // Incrémenter le compteur de likes dans le document de la photo
+        await updateDoc(postRef, { 
+          likes: increment(1) 
+        });
+        
         return true;
       } else {
         // Retirer des favoris
         const docToDelete = querySnapshot.docs[0];
         await deleteDoc(doc(db, 'users', userEmail, 'favorites', docToDelete.id));
+        
+        // Décrémenter le compteur de likes dans le document de la photo
+        await updateDoc(postRef, { 
+          likes: increment(-1) 
+        });
+        
         return false;
       }
     } catch (error) {
