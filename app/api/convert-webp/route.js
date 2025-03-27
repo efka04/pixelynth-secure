@@ -20,7 +20,7 @@ const serviceAccount = {
 if (!getApps().length) {
   initializeApp({
     credential: cert(serviceAccount),
-    storageBucket: 'pixelynth-c41ea.appspot.com'
+    storageBucket: 'pixelynth-c41ea.firebasestorage.app'
   });
 }
 
