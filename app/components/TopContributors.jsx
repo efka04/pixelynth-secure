@@ -1,45 +1,42 @@
-"use client";
+// Composant serveur pour récupérer les données des top contributors
+import React from 'react';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '@/app/db/firebaseConfig';
+import ClientTopContributors from './ClientTopContributors';
 
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import UserTag from "@/app/components/UserTag"; // Import UserTag component
+// Fonction pour récupérer les données côté serveur
+async function getTopContributors() {
+  try {
+    // Récupération des données depuis Firestore
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('photoCount', 'desc'), limit(3));
+    const querySnapshot = await getDocs(q);
+    
+    const contributors = [];
+    querySnapshot.forEach((doc) => {
+      contributors.push({
+        email: doc.id,
+        username: doc.data().username,
+        photoCount: doc.data().photoCount || 0,
+        profileImage: doc.data().profileImage || null
+      });
+    });
+    
+    return contributors;
+  } catch (error) {
+    console.error("Error fetching top contributors:", error);
+    return [];
+  }
+}
 
-function TopContributors() {
-  const [topContributors, setTopContributors] = useState([]);
-
-  useEffect(() => {
-    const fetchTopContributors = async () => {
-      try {
-        const response = await axios.get("/api/top-contributors"); // Fetch real user data
-        setTopContributors(response.data);
-      } catch (error) {
-        console.error("Error fetching top contributors:", error);
-      }
-    };
-
-    fetchTopContributors();
-  }, []);
-
+export default async function TopContributors() {
+  // Récupérer les données côté serveur
+  const contributors = await getTopContributors();
+  
   return (
-    <div className="md:w-1/3 bg-gray-100  rounded-xl p-8 flex flex-col justify-between items-start text-black py-4 space-y-2">
+    <div className="bg-gray-100 rounded-xl p-8 flex flex-col justify-between items-start text-black py-4 space-y-2">
       <h2 className="text-1xl font-bold">Top Contributors</h2>
-      <ul className="space-y-1">
-        {topContributors.length > 0 ? (
-          topContributors.map((user, index) => (
-            <li
-              key={index}
-              className="hover:bg-gray-100 rounded-md transition-colors p-2 flex items-center"
-            >
-              <UserTag userEmail={user.email} theme="dark" />
-              <span className="text-sm text-gray-600">- {user.photoCount} images</span>
-            </li>
-          ))
-        ) : (
-          <li className="text-gray-500"></li>
-        )}
-      </ul>
+      <ClientTopContributors initialContributors={contributors} />
     </div>
   );
 }
-
-export default TopContributors;

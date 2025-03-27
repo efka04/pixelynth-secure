@@ -15,6 +15,8 @@ const formatImageUrl = (url) => {
 };
 
 async function isSlugUnique(slug) {
+  if (!slug) return true; // Si le slug est undefined, on considère qu'il est unique
+  
   const articlesRef = collection(db, 'articles');
   const q = query(articlesRef, where('slug', '==', slug));
   const snapshot = await getDocs(q);
@@ -22,6 +24,8 @@ async function isSlugUnique(slug) {
 }
 
 async function generateUniqueSlug(title) {
+  if (!title) return ''; // Retourner une chaîne vide si le titre est undefined
+  
   let slug = title
     .toLowerCase()
     .trim()
@@ -59,8 +63,8 @@ export async function getArticles() {
         ...data,
         slug: data.slug || doc.id, // Fallback to ID if no slug exists
         coverImage: formatImageUrl(data.coverImage),
-        createdAt: data.createdAt?.toDate(),
-        updatedAt: data.updatedAt?.toDate(),
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        updatedAt: data.updatedAt?.toDate?.() || new Date(),
       });
     });
     
@@ -74,6 +78,7 @@ export async function getArticles() {
 export async function getArticleBySlug(slug) {
   try {
     if (!db) throw new Error('Firestore is not initialized');
+    if (!slug) throw new Error('Slug is required');
     
     const articlesRef = collection(db, 'articles');
     const q = query(articlesRef, where('slug', '==', slug));
@@ -92,8 +97,8 @@ export async function getArticleBySlug(slug) {
     return {
       id: doc.id,
       ...data,
-      createdAt: data.createdAt?.toDate(),
-      updatedAt: data.updatedAt?.toDate(),
+      createdAt: data.createdAt?.toDate?.() || new Date(),
+      updatedAt: data.updatedAt?.toDate?.() || new Date(),
     };
   } catch (error) {
     console.error('Error fetching article:', error);
@@ -104,6 +109,8 @@ export async function getArticleBySlug(slug) {
 export async function createArticle(articleData) {
   try {
     const { title } = articleData;
+    
+    if (!title) throw new Error('Title is required');
     
     // Vérifier si le titre existe déjà
     const titleQuery = query(collection(db, 'articles'), where('title', '==', title));
@@ -156,6 +163,8 @@ export const checkAdminStatus = (callback) => {
 
 export async function getArticleById(id) {
   try {
+    if (!id) throw new Error('Article ID is required');
+    
     const docRef = doc(db, 'articles', id);
     const docSnap = await getDoc(docRef);
     
@@ -163,11 +172,12 @@ export async function getArticleById(id) {
       throw new Error('Article not found');
     }
 
+    const data = docSnap.data();
     return {
       id: docSnap.id,
-      ...docSnap.data(),
-      createdAt: docSnap.data().createdAt?.toDate(),
-      updatedAt: docSnap.data().updatedAt?.toDate(),
+      ...data,
+      createdAt: data.createdAt?.toDate?.() || new Date(),
+      updatedAt: data.updatedAt?.toDate?.() || new Date(),
     };
   } catch (error) {
     console.error('Error fetching article by ID:', error);
@@ -177,6 +187,8 @@ export async function getArticleById(id) {
 
 export async function updateArticle(id, data) {
   try {
+    if (!id) throw new Error('Article ID is required');
+    
     const docRef = doc(db, 'articles', id);
     await updateDoc(docRef, data);
   } catch (error) {
@@ -187,6 +199,8 @@ export async function updateArticle(id, data) {
 
 export async function deleteArticle(id) {
   try {
+    if (!id) throw new Error('Article ID is required');
+    
     const docRef = doc(db, 'articles', id);
     await deleteDoc(docRef);
   } catch (error) {
@@ -198,8 +212,9 @@ export async function deleteArticle(id) {
 export async function getPostBySlug(slug) {
   try {
     if (!db) throw new Error('Firestore is not initialized');
+    if (!slug) throw new Error('Slug is required');
     
-    const postsRef = collection(db, 'posts'); // ou 'images' ou autre collection appropriée
+    const postsRef = collection(db, 'post'); // ou 'images' ou autre collection appropriée
     const q = query(postsRef, where('slug', '==', slug));
     const querySnapshot = await getDocs(q);
     
@@ -211,8 +226,9 @@ export async function getPostBySlug(slug) {
     return {
       id: doc.id,
       ...data,
-      createdAt: data.createdAt?.toDate(),
-      updatedAt: data.updatedAt?.toDate(),
+      createdAt: data.createdAt?.toDate?.() || new Date(),
+      updatedAt: data.updatedAt?.toDate?.() || new Date(),
+      tags: data.tags || [], // S'assurer que tags est toujours un tableau
     };
   } catch (error) {
     console.error('Error fetching post:', error);

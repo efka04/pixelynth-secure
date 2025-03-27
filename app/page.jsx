@@ -1,52 +1,39 @@
-"use client";
-import React, { useEffect, Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import Head from 'next/head';
-import { useSearch } from '@/app/context/OptimizedSearchContext';
-import { CategoryProvider } from '@/app/context/CategoryContext';
-import CategoryBar from '@/app/components/CategoryBar';
-import TopContributors from '@/app/components/TopContributors'; // Import TopContributors component
-import PostsGrid from '@/app/components/PostsGrid';
-import { usePathname } from 'next/navigation'; // Import usePathname
+// Composant serveur (par défaut dans Next.js App Router)
+import React, { Suspense } from 'react';
+import { Metadata } from 'next';
+import TopContributors from './components/TopContributors';
+import ClientHomePage from './components/ClientHomePage';
 
-// Import dynamique d'ArticleList avec Suspense
-const ArticleList = dynamic(() => import('@/app/components/ArticleList'), {
-  suspense: true,
-});
+// Définition des métadonnées statiques pour la page d'accueil
+export const metadata = {
+  title: 'Pixelynth - Free AI-generated Stock Images',
+  description: 'Download high-quality, royalty-free AI-generated stock images for your commercial and personal projects.',
+  keywords: 'AI images, stock photos, free images, artificial intelligence, digital art, stock images, AI generated images, AI pictures',
+  openGraph: {
+    title: 'Pixelynth - Free AI-generated Stock Images',
+    description: 'Download high-quality, royalty-free AI-generated stock images for your commercial and personal projects.',
+    type: 'website',
+    images: ['/og-image.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pixelynth - Free AI-generated Stock Images',
+    description: 'Download high-quality, royalty-free AI-generated stock images for your commercial and personal projects.',
+    images: ['/og-image.jpg'],
+  },
+};
 
 export default function RootPage() {
-  const { searchResults, performSearch, selectedPeople } = useSearch();
-  const pathname = usePathname(); // Get the current route
-
-  useEffect(() => {
-    performSearch();
-  }, [performSearch]);
-
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        })
-        .catch((error) => {
-          console.log('ServiceWorker registration failed: ', error);
-        });
-    }
-  }, []);
-
   return (
-    <CategoryProvider>
-      <main className="min-h-screen flex items-center">
-        <Head>
-          <meta name="keywords" content="AI images, stock photos, free images, artificial intelligence, digital art, stock images, AI generated images, AI pictures" />
-        </Head>
-        <div className="pt-2 w-full">
-          <div className="max-w-7xl mx-auto px-4"> {/* Add pt-16 for spacing */}
-            <CategoryBar isSticky={pathname === '/'} /> {/* Pass isSticky prop */}
-
-            <div className="flex flex-col md:flex-row items-stretch gap-6 mb-4">
-              {/* Bloc Titre (2/3) */}
-              <div className="md:w-2/3 rounded-xl p-8 flex flex-col justify-center items-start text-black py-4 space-y-2">
+    <main className="min-h-screen flex items-center">
+      <div className="pt-2 w-full">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Section statique rendue côté serveur */}
+          <div className="flex flex-col items-stretch gap-6 mb-4">
+            {/* Bloc Titre et Top Contributors alignés */}
+            <div className="flex flex-col lg:flex-row items-start gap-6">
+              {/* Bloc Titre */}
+              <div className="rounded-xl p-8 flex flex-col justify-center items-start text-black py-4 space-y-2 w-full lg:w-2/3">
                 <div>
                   <h1 className="text-5xl mt-2 text-left">
                     Free AI-generated Stock Images
@@ -56,18 +43,24 @@ export default function RootPage() {
                   </p>
                 </div>
               </div>
-              {/* Bloc Top Contributors */}
-              <TopContributors />
-            </div>
-            <div className="mb-4">
-            </div>
-            <Suspense fallback={<div></div>}>
-                <PostsGrid listPosts={searchResults} selectedPeople={selectedPeople} />
-            </Suspense>
 
+              {/* Top Contributors - rendu côté serveur */}
+              <div className="w-full lg:w-1/3">
+                <Suspense fallback={<div className="bg-gray-100 rounded-xl p-4 h-full">Loading contributors...</div>}>
+                  <div className="bg-gray-100 rounded-xl p-4 h-full">
+                    <TopContributors />
+                  </div>
+                </Suspense>
+              </div>
+            </div>
+
+            {/* Composant client pour la galerie et les fonctionnalités interactives */}
+            <Suspense fallback={<div>Loading gallery...</div>}>
+              <ClientHomePage />
+            </Suspense>
           </div>
         </div>
-      </main>
-    </CategoryProvider>
+      </div>
+    </main>
   );
 }
