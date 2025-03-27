@@ -1,12 +1,12 @@
 import type { Metadata, ResolvingMetadata } from "next";
 
 // Define interface for Search Query type
-interface SearchQuery {
+type Params = {
   query: string;
-}
+};
 
 type Props = {
-  params: { query: string };
+  params: Promise<Params>;
   children: React.ReactNode;
 };
 
@@ -14,11 +14,12 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  // Decode search query
+  // Decode search query - using await with params
+  const { query } = await params;
   let decodedQuery = "";
-  if (params.query) {
+  if (query) {
     // Step 1: decode URL
-    decodedQuery = decodeURIComponent(params.query);
+    decodedQuery = decodeURIComponent(query);
     // Step 2: replace hyphens with spaces
     decodedQuery = decodedQuery.replace(/-/g, ' ');
   }

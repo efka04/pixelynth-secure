@@ -14,8 +14,12 @@ interface Article {
   tags: string[];
 }
 
+type Params = {
+  slug: string;
+};
+
 type Props = {
-  params: { slug: string };
+  params: Promise<Params>;
   children: React.ReactNode;
 };
 
@@ -23,8 +27,9 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  // Retrieve article data
-  const article = await getArticleBySlug(params.slug) as Article | null;
+  // Retrieve article data - using await with params
+  const { slug } = await params;
+  const article = await getArticleBySlug(slug) as Article | null;
   
   if (!article) {
     return {

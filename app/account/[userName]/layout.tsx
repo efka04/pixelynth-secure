@@ -8,8 +8,12 @@ interface User {
   profileImage?: string;
 }
 
+type Params = {
+  userName: string;
+};
+
 type Props = {
-  params: { userName: string };
+  params: Promise<Params>;
   children: React.ReactNode;
 };
 
@@ -17,8 +21,8 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  // Get username from parameters
-  const { userName } = params;
+  // Get username from parameters - using await with params
+  const { userName } = await params;
   
   // Here, you could retrieve user data from an API or database
   // const user = await getUserByUserName(userName) as User | null;

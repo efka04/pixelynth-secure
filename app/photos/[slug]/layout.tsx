@@ -13,8 +13,12 @@ interface Photo {
   author?: string;
 }
 
+type Params = {
+  slug: string;
+};
+
 type Props = {
-  params: { slug: string };
+  params: Promise<Params>;
   children: React.ReactNode;
 };
 
@@ -22,8 +26,9 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  // Retrieve photo data
-  const photo = await getPostBySlug(params.slug) as Photo | null;
+  // Retrieve photo data - using await with params
+  const { slug } = await params;
+  const photo = await getPostBySlug(slug) as Photo | null;
   
   if (!photo) {
     return {
