@@ -17,7 +17,7 @@ const firebaseConfig = {
   apiKey: getEnvOrFallback('NEXT_PUBLIC_FIREBASE_API_KEY', 'dummy-api-key-for-development'),
   authDomain: getEnvOrFallback('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', 'pixelynth-c41ea.firebaseapp.com'),
   projectId: getEnvOrFallback('NEXT_PUBLIC_FIREBASE_PROJECT_ID', 'pixelynth-c41ea'),
-  storageBucket: getEnvOrFallback('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', 'pixelynth-c41ea.appspot.com'),
+  storageBucket: getEnvOrFallback('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', 'pixelynth-c41ea.firebasestorage.app'),
   messagingSenderId: getEnvOrFallback('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', '123456789012'),
   appId: getEnvOrFallback('NEXT_PUBLIC_FIREBASE_APP_ID', '1:123456789012:web:abcdef1234567890'),
   measurementId: getEnvOrFallback('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', 'G-ABCDEFGHIJ')
