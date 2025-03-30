@@ -1,27 +1,7 @@
 // Composant serveur (par défaut dans Next.js App Router)
 import React, { Suspense } from 'react';
-import { Metadata } from 'next';
 import TopContributors from './components/TopContributors';
 import ClientHomePage from './components/ClientHomePage';
-
-// Définition des métadonnées statiques pour la page d'accueil
-export const metadata = {
-  title: 'Pixelynth - Free AI-generated Stock Images',
-  description: 'Download high-quality, royalty-free AI-generated stock images for your commercial and personal projects.',
-  keywords: 'AI images, stock photos, free images, artificial intelligence, digital art, stock images, AI generated images, AI pictures',
-  openGraph: {
-    title: 'Pixelynth - Free AI-generated Stock Images',
-    description: 'Download high-quality, royalty-free AI-generated stock images for your commercial and personal projects.',
-    type: 'website',
-    images: ['/og-image.jpg'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Pixelynth - Free AI-generated Stock Images',
-    description: 'Download high-quality, royalty-free AI-generated stock images for your commercial and personal projects.',
-    images: ['/og-image.jpg'],
-  },
-};
 
 export default function RootPage() {
   return (
