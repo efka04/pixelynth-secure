@@ -127,7 +127,6 @@ export const executeQueryWithCache = async (q, cacheKey, cacheDuration = 5 * 60 
         const isValid = Date.now() - timestamp < cacheDuration;
         
         if (isValid) {
-          console.log('Utilisation des données en cache pour:', cacheKey);
           return data;
         }
       } catch (error) {

@@ -14,6 +14,61 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: '/fashion/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/animal/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/lifestyle/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/beauty/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/nature/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/people/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/technology/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/experimental/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/architecture-interior/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/food-drink/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
+        source: '/texture-patterns/:slug',
+        destination: '/search/photos/:slug',
+        permanent: true,
+      },
+      {
         source: '/tag/:slug',
         destination: '/search/photos/:slug',
         permanent: true,

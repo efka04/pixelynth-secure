@@ -39,7 +39,6 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
           if (!querySnapshot.empty) {
             // L'ID du document est l'email de l'utilisateur
             const email = querySnapshot.docs[0].id;
-            console.log("Conversion réussie : username", userEmail, "-> email", email);
             setActualUserEmail(email);
           } else {
             console.error("Aucun utilisateur trouvé avec le username:", userEmail);
@@ -64,13 +63,11 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
       // Si le username doit être converti et que la conversion n'est pas encore terminée,
       // actualUserEmail sera toujours égal à userEmail (le username initial)
       if (isUserNameNotEmail && actualUserEmail === userEmail) {
-        console.log("Conversion en cours, actualUserEmail:", actualUserEmail);
         return;
       }
       
       setLoading(true);
       try {
-        console.log("Recherche de la collection pour actualUserEmail:", actualUserEmail, "avec name:", collectionId);
         const collectionsRef = collection(db, 'users', actualUserEmail, 'collections');
         // Normalisation de la casse : conversion en minuscules du paramètre collectionId
         const normalizedCollectionName = collectionId.toLowerCase();
@@ -78,7 +75,6 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-          console.error("Aucun document trouvé avec le champ 'name' égal à:", normalizedCollectionName);
           setCollectionData(null);
           setImages([]);
           return;
@@ -90,7 +86,6 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
           ...collectionDoc.data()
         };
         
-        console.log("Collection trouvée :", data);
         setCollectionData(data);
         setIsOwner(session?.user?.email === actualUserEmail);
         

@@ -161,7 +161,6 @@ export default function MultiUploadPage() {
   useEffect(() => {
     if (status === "loading") return;
     if (status === "unauthenticated") {
-      console.log("Session unauthenticated, redirecting to signin");
       //router.replace("/signin");
     }
   }, [status, router]);

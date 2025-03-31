@@ -77,7 +77,6 @@ export function SearchProvider({ children }) {
     
     // Définir un nouveau timeout
     searchTimeoutRef.current = setTimeout(() => {
-      console.log("Search timeout reached, stopping spinner");
       setIsSearching(false);
       setSearchResults([]);
       setVisiblePosts([]);
@@ -90,7 +89,6 @@ export function SearchProvider({ children }) {
       
       // Diviser la requête en termes individuels pour la recherche pondérée
       const searchTerms = splitSearchQuery(searchTerm);
-      console.log("Termes de recherche:", searchTerms);
       
       // Obtenir les conditions de filtrage
       const filterConditions = buildFilterConditions();
@@ -104,9 +102,7 @@ export function SearchProvider({ children }) {
           postsPerPage,
           null
         );
-      
-      console.log(`Nombre de documents trouvés: ${results.length}, Score max: ${results.length > 0 ? results[0]._score : 'N/A'}`);
-      
+            
       setTotalResults(total);
       setSearchResults(results);
       setVisiblePosts(results);

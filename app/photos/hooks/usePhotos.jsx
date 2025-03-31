@@ -71,10 +71,8 @@ export default function usePhotos() {
         setArticleDetails({ id: docSnap.id, ...docSnap.data() });
       } else {
         setArticleDetails(null);
-        console.log('Document not found!');
       }
     } catch (error) {
-      console.error('Error fetching document:', error);
       setArticleDetails(null);
     } finally {
       setIsLoading(false);

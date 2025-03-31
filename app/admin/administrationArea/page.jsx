@@ -45,20 +45,16 @@ export default function AdministrationArea() {
     const postData = postSnap.data();
   
     if (!postData.userEmail) {
-      console.error("userEmail manquant pour le post ID:", postId);
       return;
     }
   
-    console.log("Processus d'approbation lancé pour l'utilisateur :", postData.userEmail);
   
     try {
       await setDoc(postRef, postData);
       await deleteDoc(tempRef);
       await updateUserPhotoCount(postData.userEmail); // Incrémentation du compteur
       setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-      console.log(`Post approuvé et compteur mis à jour pour ${postData.userEmail}`);
     } catch (error) {
-      console.error("Erreur lors de l'approbation du post :", error);
     }
   };
 

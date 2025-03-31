@@ -18,7 +18,6 @@ export default function AddToCollectionButton({ imageId, userEmail }) {
   const effectiveUserEmail = userEmail || session?.user?.email;
 
   useEffect(() => {
-    console.log('AddToCollectionButton mounted with userEmail:', effectiveUserEmail);
   }, [effectiveUserEmail]);
 
   const fetchUserCollections = async () => {
@@ -28,7 +27,6 @@ export default function AddToCollectionButton({ imageId, userEmail }) {
     setError('');
     
     try {
-      console.log('Fetching collections for user:', effectiveUserEmail);
       // Security check: Ensure we're only fetching collections for the current user
       if (session.user.email !== effectiveUserEmail && !session.user.isAdmin) {
         console.error('Unauthorized access attempt by:', session.user.email);
@@ -38,7 +36,6 @@ export default function AddToCollectionButton({ imageId, userEmail }) {
       const collectionsRef = collection(db, 'users', effectiveUserEmail, 'collections');
       const collectionsQuery = query(collectionsRef, orderBy('name', 'asc'));
       const snapshot = await getDocs(collectionsQuery);
-      console.log('Collections fetched:', snapshot.docs.length);
       
       const collectionsData = snapshot.docs.map(doc => ({
         id: doc.id,

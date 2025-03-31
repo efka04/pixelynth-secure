@@ -23,7 +23,6 @@ export default function Downloaded({ userEmail }) {
   // Fonction pour récupérer les téléchargements
   const fetchDownloads = async (isInitial = false) => {
     if (!userEmail) {
-      console.log('No user email provided');
       return;
     }
 

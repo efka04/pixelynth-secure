@@ -99,7 +99,6 @@ export function SearchProvider({ children }) {
     
     // Définir un timeout pour s'assurer que le spinner ne tourne pas indéfiniment
     const searchTimeout = setTimeout(() => {
-      console.log("Search timeout reached, stopping spinner");
       setIsSearching(false);
       setSearchResults([]);
       setVisiblePosts([]);

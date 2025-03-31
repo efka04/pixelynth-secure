@@ -12,7 +12,6 @@ const ShareButton = ({ id }) => {
           url: url
         });
       } catch (err) {
-        console.log('Error sharing:', err);
       }
     } else {
       await navigator.clipboard.writeText(url);

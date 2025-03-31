@@ -27,20 +27,17 @@ const ArticleList = React.memo(({ listPosts }) => {
   useEffect(() => {
     if (uniquePosts?.length > 0 && isInitialLoad) {
       setIsInitialLoad(false);
-      console.log("Fin du chargement initial, uniquePosts.length =", uniquePosts.length);
     }
   }, [uniquePosts, isInitialLoad]);
 
   const visiblePosts = useMemo(() => {
     const visible = uniquePosts.slice(0, displayedItems);
-    console.log("visiblePosts =", visible.length, "sur", uniquePosts.length);
     return visible;
   }, [uniquePosts, displayedItems]);
 
   const loadMore = useCallback(() => {
     if (isLoadingMore) return;
     setIsLoadingMore(true);
-    console.log("Chargement de posts supplémentaires...");
     setDisplayedItems((prev) => Math.min(prev + ITEMS_PER_PAGE, uniquePosts.length));
     setIsLoadingMore(false);
   }, [uniquePosts.length, isLoadingMore]);
@@ -49,7 +46,6 @@ const ArticleList = React.memo(({ listPosts }) => {
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        console.log("IntersectionObserver entry:", entry.isIntersecting);
         if (
           entry.isIntersecting &&
           !isLoadingMore &&

@@ -23,7 +23,6 @@ const DownloadButton = ({ item, variant }) => {
 
       // 1. Télécharger l'image directement sans vérification HEAD préalable
       const response = await fetch(imageUrl);
-      console.log('📥 Statut de la réponse fetch:', response.status);
 
       if (!response.ok) {
         alert("L'image semble inaccessible ou a été supprimée. Réessayez plus tard.");
@@ -52,18 +51,15 @@ const DownloadButton = ({ item, variant }) => {
         const postDoc = await getDoc(postRef);
         if (postDoc.exists()) {
           await updateDoc(postRef, { downloadCount: increment(1) });
-          console.log('🔼 Compteur de téléchargement mis à jour');
         }
       }
 
       // 6. Enregistrer dans l'historique de téléchargement si utilisateur authentifié
       if (session?.user?.email) {
-        console.log('Utilisateur authentifié:', session.user.email);
         const userDocRef = doc(db, 'users', session.user.email);
         const userDoc = await getDoc(userDocRef);
         if (!userDoc.exists()) {
           await setDoc(userDocRef, { email: session.user.email, createdAt: new Date() });
-          console.log("Document utilisateur créé pour", session.user.email);
         }
         const downloadHistoryRef = collection(db, 'users', session.user.email, 'downloadHistory');
         await addDoc(downloadHistoryRef, {
@@ -72,9 +68,7 @@ const DownloadButton = ({ item, variant }) => {
           downloadedAt: new Date(),
           imageURL: imageUrl,
         });
-        console.log('✅ Action de téléchargement enregistrée dans lhistorique');
       } else {
-        console.log('Utilisateur non authentifié, historique non mis à jour');
       }
 
     } catch (error) {

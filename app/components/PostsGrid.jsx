@@ -23,7 +23,6 @@ const PostsGrid = ({ userEmail, listPosts: initialPosts = [] }) => {
     if (loading || (!hasMore && !reset)) return;
     setLoading(true);
 
-    console.log("Fetching posts with sort:", selectedSort);
 
     try {
       const { posts: newPosts, lastVisible } = await getPostsPaginated(
@@ -54,7 +53,6 @@ const PostsGrid = ({ userEmail, listPosts: initialPosts = [] }) => {
   ]);
 
   useEffect(() => {
-    console.log("selectedSort a changé :", selectedSort);
     loadPosts(true);
   }, [userEmail, selectedPeople, selectedOrientation, selectedColor, selectedCategory, selectedSort]);
 

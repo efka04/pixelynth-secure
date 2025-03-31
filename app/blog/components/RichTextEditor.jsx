@@ -151,7 +151,6 @@ const App = ({ value, onChange }) => {
                 const contentState = convertFromRaw(JSON.parse(value));
                 return EditorState.createWithContent(contentState, decorator);
             } catch (error) {
-                console.log('Error parsing initial content:', error);
                 return EditorState.createEmpty(decorator);
             }
         }
@@ -179,7 +178,6 @@ const App = ({ value, onChange }) => {
                 const newEditorState = EditorState.createWithContent(contentState, decorator);
                 setEditorState(newEditorState);
             } catch (error) {
-                console.log('Error updating content:', error);
             }
         }
     }, [value]);

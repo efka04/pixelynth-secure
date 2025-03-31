@@ -13,8 +13,6 @@ export default function AccountPage() {
   const { data: session, status } = useSession({
     required: false,
     onUnauthenticated() {
-      // This runs when unauthenticated but isn't mandatory for the fix
-      console.log("User is not authenticated")
     },
   })
   const router = useRouter()

@@ -62,8 +62,6 @@ async function fetchBlogs(): Promise<SitemapEntry[]> {
   try {
     const articlesRef = collection(db, 'articles');
     const snapshot = await getDocs(articlesRef);
-    console.log(`Found ${snapshot.size} article documents`);
-
     if (snapshot.empty) {
       console.warn('No article documents found. Verify that your collection name and Firebase rules are correct.');
     }
@@ -124,11 +122,6 @@ async function createSitemaps() {
   const { entries: postEntries, uniqueTags, tagCounts } = await fetchPosts();
   const blogEntries = await fetchBlogs();
   const searchEntries = generateSearchEntries(uniqueTags, tagCounts);
-
-  console.log(`Generated ${postEntries.length} post entries`);
-  console.log(`Generated ${blogEntries.length} blog entries`);
-  console.log(`Generated ${searchEntries.length} search entries (filtered to include only tags with 30+ photos)`);
-
   const staticEntries = generateStaticRoutes();
   
   const postsXML = generateSitemapXML(postEntries);

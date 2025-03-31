@@ -23,8 +23,6 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    console.log("Session status:", status);
-    console.log("Session data:", session);
   }, [status, session]);
 
   const resetFilters = () => {

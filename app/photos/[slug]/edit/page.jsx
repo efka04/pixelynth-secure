@@ -50,23 +50,19 @@ export default function EditArticle() {
                 if (imagePath) {
                     const imageRef = ref(storage, imagePath);
                     await deleteObject(imageRef);
-                    console.log(`Image supprimée: ${imagePath}`);
                 }
             }
     
             // Supprimer le document de la collection MyImages
             await deleteDoc(imageDocRef);
-            console.log(`Document supprimé de MyImages: ${imageDocRef.path}`);
 
             // Décrémenter le compteur de photos de l'utilisateur
             await updateDoc(userDocRef, {
                 photoCount: increment(-1)
             });
-            console.log(`Compteur de photos décrémenté pour: ${articleDetails.userEmail}`);
 
             // Supprimer le document de la collection post
             await deleteDoc(docRef);
-            console.log(`Document supprimé de post: ${docRef.path}`);
 
             router.push('/');
         } catch (error) {

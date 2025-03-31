@@ -21,7 +21,6 @@ export default function CollectionsList({ userEmail, isOwner }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log('CollectionsList monté avec userEmail:', userEmail);
     fetchCollections();
   }, [userEmail, session, isOwner]);
 
@@ -35,7 +34,6 @@ export default function CollectionsList({ userEmail, isOwner }) {
     setError('');
     
     try {
-      console.log('Récupération des collections pour l’utilisateur :', userEmail);
       // Vérification de sécurité : l’utilisateur doit avoir la permission de voir ces collections
       if (isOwner && session?.user?.email !== userEmail && !session?.user?.isAdmin) {
         console.error('Tentative d’accès non autorisée par :', session?.user?.email);
@@ -49,7 +47,6 @@ export default function CollectionsList({ userEmail, isOwner }) {
       );
       
       const snapshot = await getDocs(collectionsQuery);
-      console.log('Collections récupérées :', snapshot.docs.length);
       
       // Limiter le nombre de collections pour éviter les attaques DoS
       const collectionsData = snapshot.docs
@@ -112,7 +109,6 @@ export default function CollectionsList({ userEmail, isOwner }) {
     setError('');
     
     try {
-      console.log('Suppression de la collection :', collectionId);
       // Vérifier que la collection existe et appartient à l’utilisateur
       const collectionRef = doc(db, 'users', userEmail, COLLECTIONS_PATH, collectionId);
       const collectionDoc = await getDoc(collectionRef);
@@ -155,7 +151,7 @@ export default function CollectionsList({ userEmail, isOwner }) {
       
       {collections.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          {isOwner ? 'Vous n’avez pas encore créé de collections.' : 'Aucune collection trouvée.'}
+          {isOwner ? 'You haven’t created any collections yet.' : 'No collection found.'}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -182,7 +178,7 @@ export default function CollectionsList({ userEmail, isOwner }) {
                     (collection.name.length > 40 ? 
                       collection.name.substring(0, 40) + '...' : 
                       collection.name) : 
-                    'Collection sans titre'}
+                    'Untitled Collection'}
                 </h3>
                 <p className="text-gray-600 text-sm mb-2">
                   {collection.description ? 
