@@ -7,13 +7,14 @@ import { useRouter } from 'next/navigation'; // Assuming you are using Next.js
 import { useSession } from 'next-auth/react'; // Assuming you are using next-auth for authentication
 import { updateUserPhotoCount } from '@/app/account/[userName]/upload/components/CountPhotos';
 import ContributorManager from '../components/ContributorManager';
+import UserManager from '../components/UserManager';
 
 
 export default function AdministrationArea() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [posts, setPosts] = useState([]);
-  const [activeTab, setActiveTab] = useState('posts'); // 'posts' ou 'contributors'
+  const [activeTab, setActiveTab] = useState('posts'); // 'posts', 'contributors' ou 'users'
 
 
   useEffect(() => {
@@ -94,6 +95,12 @@ export default function AdministrationArea() {
         >
           Contributeurs
         </button>
+        <button 
+          className={`px-5 py-2 rounded ${activeTab === 'users' ? 'bg-black text-white' : 'bg-gray-200'}`}
+          onClick={() => setActiveTab('users')}
+        >
+          Utilisateurs
+        </button>
       </div>
 
       {activeTab === 'posts' && (
@@ -139,6 +146,10 @@ export default function AdministrationArea() {
 
 {activeTab === 'contributors' && (
   <ContributorManager />
+)}
+
+{activeTab === 'users' && (
+  <UserManager />
 )}
 </div>
 );
