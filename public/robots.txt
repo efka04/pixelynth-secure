@@ -4,11 +4,13 @@ Disallow: /account/
 Disallow: /signin
 Disallow: /admin/
 Disallow: /register/
+# Ne pas indexer les pages de recherche par défaut, sauf celles explicitement autorisées dans le sitemap
+Disallow: /search/photos/
 Allow: /
-
 
 Sitemap: https://pixelynth.com/sitemap-index.xml
 Sitemap: https://pixelynth.com/sitemap-blogs.xml
 Sitemap: https://pixelynth.com/sitemap-posts.xml
 Sitemap: https://pixelynth.com/sitemap-static.xml
 Sitemap: https://pixelynth.com/sitemap-tags.xml
+Sitemap: https://pixelynth.com/sitemap-search.xml
