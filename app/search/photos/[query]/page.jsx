@@ -77,7 +77,6 @@ export default function OptimizedSearchResults() {
             setHasMore(more);
             setTotalResults(total);
         } catch (error) {
-            console.error("Erreur lors du chargement des résultats:", error);
         } finally {
             setLoading(false);
         }
@@ -136,7 +135,7 @@ export default function OptimizedSearchResults() {
                 <div className="flex justify-between items-center my-0 mb-2">
                     <h1 className="font-bold text-4xl"></h1>
                     <p className="text-gray-500">
-                        {posts.length} {totalResults > 0 ? `sur ${totalResults}` : ''} résultat{posts.length !== 1 ? 's' : ''}
+                        {posts.length} {totalResults > 0 ? `sur ${totalResults}` : ''} result{posts.length !== 1 ? 's' : ''}
                     </p>
                 </div>
 
@@ -147,11 +146,10 @@ export default function OptimizedSearchResults() {
                 ) : posts.length === 0 ? (
                     <div className="text-center py-12">
                         <p className="text-xl text-gray-500">
-                            Aucun résultat trouvé pour "{decodedQuery}" avec les filtres sélectionnés
+                            No results found for "{decodedQuery}"
                         </p>
                         <p className="text-gray-400 mt-2">
-                            Essayez de modifier vos filtres ou d'utiliser d'autres termes de recherche
-                        </p>
+                        Try adjusting your filters or using different search terms                        </p>
                     </div>
                 ) : (
                     <>
