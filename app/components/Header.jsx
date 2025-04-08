@@ -1,101 +1,252 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useState, useEffect, useCallback } from "react";
-import { FaPlus } from "react-icons/fa";
+import { useSession, signOut } from "next-auth/react";
+import { useState, useEffect, useRef } from "react";
+import { FaPlus, FaInstagram, FaPinterest } from "react-icons/fa";
+import { IoSearchOutline } from "react-icons/io5";
+import { AiOutlineClose } from "react-icons/ai";
 import { useRouter } from "next/navigation";
-import SearchBar from "./header/SearchBar";
 import UserProfile from "./header/UserProfile";
-import { useSearch } from "../context/OptimizedSearchContext";
-import { useColor } from "../context/ColorContext";
-import BurgerMenu from "./header/BurgerMenu";
 import Link from "next/link";
 
 export default function Header() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { setSelectedPeople, setSelectedOrientation, setSelectedSort } = useSearch();
-  const { setSelectedColor } = useColor();
   const [isMounted, setIsMounted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
+  const menuRef = useRef(null);
+
+  // Simulate result count for display purposes
+  const resultCount = 241;
 
   useEffect(() => {
     setIsMounted(true);
+    
+    // Close menu when clicking outside
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    
+    // Check if we're on a search page to set hasSearched
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/search/photos/')) {
+      setHasSearched(true);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
-  useEffect(() => {
-  }, [status, session]);
-
-  const resetFilters = () => {
-    setSelectedColor(null);
-    setSelectedPeople("all");
-    setSelectedOrientation("all");
-    setSelectedSort("relevance");
-  };
-
-  const handleLogoClick = useCallback(() => {
-    resetFilters();
+  const handleLogoClick = () => {
     router.push("/");
-  }, [resetFilters, router]);
+  };
 
   const onCreateClick = () => {
+    if (session?.user) {
       router.push(`/account/${session.user.username}/upload`);
- 
+    }
   };
 
-  if (!isMounted || status === "loading") {
-    return (
-      <header className="bg-white  fixed top-1 w-full z-50">
-        <nav className="w-full bg-white">
-          <div className="flex items-center justify-between px-4 py-2 md:px-6">
-            <button onClick={handleLogoClick} className="flex-shrink-0 flex items-center">
-              <span className="font-bold text-black text-lg" style={{ fontFamily: 'PPNeueMachina', fontWeight: 800 }}>
-                Pixelynth
-              </span>
-            </button>
-            <div className="flex-1 mx-4">
-              <SearchBar />
-            </div>
-            <div className="flex items-center gap-2" style={{ minWidth: "100px" }}>
-              <BurgerMenu />
-            </div>
-          </div>
-        </nav>
-      </header>
-    );
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/');
+    setMenuOpen(false);
+  };
+
+  // Extremely simplified search input handling
+  function handleInputChange(e) {
+    setSearchTerm(e.target.value);
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {   
+      e.preventDefault();
+      if (searchTerm.trim()) {
+        setHasSearched(true);
+        router.push(`/search/photos/${searchTerm.trim()}`);
+      }
+    }
+  }
+
+  function clearSearch() {
+    setSearchTerm('');
+    setHasSearched(false);
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/search/photos/')) {
+      router.push('/');
+    }
   }
 
   return (
-    <header className="bg-white border-b border-black fixed top-0 w-full z-50">
-      <nav className="w-full bg-white">
-        <div className="flex items-center justify-between px-4 py-2 md:px-6">
-          <button onClick={handleLogoClick} className="flex-shrink-0 flex items-center">
-            <span className="font-bold text-black text-lg" style={{ fontFamily: 'PPNeueMachina', fontWeight: 800 }}>
+    <header className="fixed top-2 w-full z-50 px-4">
+      <nav className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between flex-wrap md:flex-nowrap h-12">
+          <button 
+            onClick={handleLogoClick} 
+            className="bg-white rounded-full h-12 px-4 flex items-center gap-2 hover:bg-gray-100 transition-colors border border-black flex-shrink-0"
+          >
+            <span className="font-bold text-black text-lg whitespace-nowrap" style={{ fontFamily: 'Kdam Thmor Pro, sans-serif', fontWeight: 800 }}>
               Pixelynth
             </span>
+            <span className="bg-white rounded-full p-1 border border-black">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
           </button>
-          <div className="flex-1 mx-4">
-            <SearchBar />
+          
+          <div className="flex-1 mx-2 w-full md:w-auto order-last md:order-none mt-2 md:mt-0">
+            <form onSubmit={(e) => e.preventDefault()} className="relative w-full h-12">
+              <div className="bg-white border border-black rounded-full flex items-center w-full h-full overflow-hidden">
+                <div className="flex-shrink-0 pl-4">
+                  <IoSearchOutline className="text-xl text-gray-700" />
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search..."
+                  className="bg-transparent outline-none w-full h-full px-3 text-sm"
+                  aria-label="Search"
+                />
+                <div className="flex items-center mr-2 h-full">
+                  {hasSearched && (
+                    <div className="bg-black text-white text-sm font-medium rounded-full px-4 py-1 mr-2">
+                      {resultCount}
+                    </div>
+                  )}
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="bg-white rounded-full p-2 border border-black hover:bg-gray-100 transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <AiOutlineClose className="text-xl" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </form>
           </div>
-          <div className="flex items-center gap-2">
+          
+          <div className="flex items-center gap-2 flex-shrink-0 h-12">
             {session?.user ? (
               <>
                 <button
                   onClick={onCreateClick}
-                  className="bg-black hover:bg-red-900 p-2 text-sm text-white rounded-full"
+                  className="bg-black text-white rounded-full h-12 w-12 flex items-center justify-center hover:bg-gray-800 transition-colors"
+                  aria-label="Create new"
                 >
-                  <FaPlus size={16} />
+                  <FaPlus size={20} />
                 </button>
-                <UserProfile session={session} />
+                <div className="h-12 flex items-center">
+                  <UserProfile session={session} />
+                </div>
               </>
             ) : (
               <Link
                 href="/signin"
-                className="px-4 py-2 text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                className="h-12 px-4 flex items-center text-sm bg-black text-white rounded-full hover:bg-gray-800 transition-colors"
               >
                 Log in
               </Link>
             )}
-            <BurgerMenu />
+            
+            <div className="relative h-12 flex items-center" ref={menuRef}>
+              <button 
+                onClick={toggleMenu}
+                className="bg-white rounded-full h-12 px-4 border border-black hover:bg-gray-100 transition-colors flex items-center gap-2"
+                aria-expanded={menuOpen}
+                aria-haspopup="true"
+                aria-controls="header-menu"
+              >
+                <span className="font-medium whitespace-nowrap hidden md:inline">Menu</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+              
+              {menuOpen && (
+                <div 
+                  id="header-menu"
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200 top-full"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="menu-button"
+                >
+                  <Link 
+                    href="/"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    tabIndex={0}
+                  >
+                    Home
+                  </Link>
+                  <Link 
+                    href="/about"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    tabIndex={0}
+                  >
+                    About
+                  </Link>
+                  <Link 
+                    href="/contact"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    tabIndex={0}
+                  >
+                    Contact
+                  </Link>
+                  
+                  {session?.user ? (
+                    <button 
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                      role="menuitem"
+                      tabIndex={0}
+                    >
+                      Log out
+                    </button>
+                  ) : (
+                    <Link 
+                      href="/signin"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      tabIndex={0}
+                    >
+                      Log in
+                    </Link>
+                  )}
+                  
+                  <div className="border-t border-gray-200 mt-1 pt-1">
+                    <div className="flex justify-center gap-2 py-2">
+                      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
+                        <FaInstagram size={18} />
+                      </a>
+                      <a href="https://pinterest.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
+                        <FaPinterest size={18} />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>

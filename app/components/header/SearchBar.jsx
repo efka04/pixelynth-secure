@@ -48,9 +48,9 @@ export default function SearchBar() {
     }, [performSearch]);
 
     return (
-        <form onSubmit={(e) => e.preventDefault()} >
-            <div className="bg-gray-200 transition-all rounded-full p-1.5 flex items-center gap-3 w-full md:hover:bg-gray-300">
-                <IoSearchOutline className="text-2xl text-gray-500" />
+        <form onSubmit={(e) => e.preventDefault()} className="relative ">
+            <div className="bg-white border-[1px] border-black transition-all rounded-full p-2 flex items-center gap-3 w-full md:w-[800px]">
+                <IoSearchOutline className="text-2xl text-gray-500 ml-2" />
                 <input
                     type="text"
                     value={searchTerm}
@@ -60,23 +60,25 @@ export default function SearchBar() {
                     className="bg-transparent outline-none w-full"
                     aria-label="Search"
                 />
-                {isSearching && searchTerm.length >= 2 && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-transparent" />
-                )}
                 {searchTerm && (
-                    <button
-                        type="button"
-                        onClick={() => {
-                            clearSearch();
-                            if (window.location.pathname.startsWith('/search/photos/')) {
-                                router.push('/');
-                            }
-                        }}
-                        className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                        aria-label="Clear search"
-                    >
-                        <AiOutlineClose className="text-2xl" />
-                    </button>
+                    <div className="flex items-center">
+                        {isSearching && searchTerm.length >= 2 && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-transparent mr-2" />
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                clearSearch();
+                                if (window.location.pathname.startsWith('/search/photos/')) {
+                                    router.push('/');
+                                }
+                            }}
+                            className="text-gray-500 hover:text-gray-700 focus:outline-none mr-2"
+                            aria-label="Clear search"
+                        >
+                            <AiOutlineClose className="text-2xl" />
+                        </button>
+                    </div>
                 )}
             </div>
         </form>

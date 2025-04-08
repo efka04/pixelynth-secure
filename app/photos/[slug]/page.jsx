@@ -116,7 +116,7 @@ export default async function ArticlePage({ params }) {
     const serializedPosts = morePosts.map(post => serializeData(post));
     
     return (
-      <div className="bg-white min-h-screen p-4 md:p-8 max-w-7xl mx-auto">
+      <div className="bg-white min-h-screen mt-8 max-w-7xl mx-auto px-4">
         <ClientInteractivity articleId={articleDetails.id}>
           <PhotosContent
             articleDetails={articleDetails}

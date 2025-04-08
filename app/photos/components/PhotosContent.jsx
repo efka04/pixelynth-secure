@@ -75,14 +75,14 @@ export default function PhotosContent({
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={() => router.back()}
-          className="flex gap-2 items-center hover:bg-gray-100 p-2 rounded-md"
+          className="flex gap-2 items-center hover:bg-gray-100 p-2 rounded-3xl"
         >
-          <HiArrowSmallLeft className="text-2xl" />
+          <HiArrowSmallLeft className="text-2xl border-[1px] bg-white  border-black rounded-xl" />
           <span>Back</span>
         </button>
         <div className="flex gap-2">
           {articleDetails.userEmail && (
-            <div className="relative">
+            <div className="relative ">
               <button
                 onClick={() => setShowDropdown(prev => !prev)}
                 className="bg-white text-gray-700 p-2 rounded-md hover:bg-gray-100"

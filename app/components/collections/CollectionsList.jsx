@@ -21,74 +21,57 @@ export default function CollectionsList({ userEmail, isOwner }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const fetchCollections = async () => {
+      if (!userEmail) {
+        console.error('fetchCollections: userEmail est indéfini');
+        return;
+      }
+
+      setLoading(true);
+      setError('');
+
+      try {
+        // Récupérer le username depuis Firestore
+        const userDocRef = doc(db, 'users', userEmail);
+        const userDocSnap = await getDoc(userDocRef);
+        const username = userDocSnap.exists() ? userDocSnap.data().username : null;
+
+        if (!username) {
+          console.error('fetchCollections: username introuvable');
+          setError('Erreur lors de la récupération du username.');
+          return;
+        }
+
+        const collectionsRef = collection(db, 'users', userEmail, COLLECTIONS_PATH);
+        const collectionsQuery = query(
+          collectionsRef,
+          orderBy('createdAt', 'desc')
+        );
+
+        const snapshot = await getDocs(collectionsQuery);
+
+        const collectionsData = snapshot.docs.map(doc => {
+          console.log('Collection thumbnailUrl:', doc.data().thumbnailUrl);
+          console.log('Collection data:', doc.data());
+          return {
+            id: doc.id,
+            ...doc.data(),
+            username, // Ajouter le username pour générer l'URL
+          };
+        });
+
+        setCollections(collectionsData);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des collections :', error);
+        setError('Erreur lors du chargement des collections. Veuillez réessayer plus tard.');
+        setCollections([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCollections();
   }, [userEmail, session, isOwner]);
-
-  const fetchCollections = async () => {
-    if (!userEmail) {
-      console.error('fetchCollections: userEmail est indéfini');
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      // Vérification de sécurité : l’utilisateur doit avoir la permission de voir ces collections
-      if (isOwner && session?.user?.email !== userEmail && !session?.user?.isAdmin) {
-        console.error('Tentative d’accès non autorisée par :', session?.user?.email);
-        throw new Error('Accès non autorisé aux collections');
-      }
-      
-      const collectionsRef = collection(db, 'users', userEmail, COLLECTIONS_PATH);
-      const collectionsQuery = query(
-        collectionsRef,
-        orderBy('createdAt', 'desc')
-      );
-      
-      const snapshot = await getDocs(collectionsQuery);
-      
-      // Limiter le nombre de collections pour éviter les attaques DoS
-      const collectionsData = snapshot.docs
-        .slice(0, MAX_COLLECTIONS_DISPLAY)
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-      
-      // Récupérer la première image pour chaque collection
-      const collectionsWithImages = await Promise.all(
-        collectionsData.map(async (collection) => {
-          try {
-            if (collection.imageIds && collection.imageIds.length > 0) {
-              const firstImageId = collection.imageIds[0];
-              const imageRef = doc(db, 'post', firstImageId);
-              const imageSnap = await getDoc(imageRef);
-              
-              if (imageSnap.exists()) {
-                return {
-                  ...collection,
-                  illustrationImage: imageSnap.data().url || imageSnap.data().imageUrl || imageSnap.data().webpURL
-                };
-              }
-            }
-            return collection;
-          } catch (error) {
-            console.error('Erreur lors de la récupération de l’image pour la collection :', error);
-            return collection;
-          }
-        })
-      );
-      
-      setCollections(collectionsWithImages);
-    } catch (error) {
-      console.error('Erreur lors de la récupération des collections :', error);
-      setError('Erreur lors du chargement des collections. Veuillez réessayer plus tard.');
-      setCollections([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteCollection = async (e, collectionId) => {
     e.preventDefault();
@@ -145,7 +128,7 @@ export default function CollectionsList({ userEmail, isOwner }) {
       
       {isOwner && (
         <div className="mb-6">
-          <NewCollectionButton userEmail={userEmail} onCollectionCreated={fetchCollections} />
+          <NewCollectionButton userEmail={userEmail} onCollectionCreated={() => setLoading(true)} />
         </div>
       )}
       
@@ -158,14 +141,13 @@ export default function CollectionsList({ userEmail, isOwner }) {
           {collections.map(collection => (
             <div key={collection.id} className="relative group">
               <Link 
-                // On convertit le nom de la collection en minuscules pour être cohérent avec la casse attendue dans les routes
-                href={`/account/${session?.user?.username || ''}/collections/${encodeURIComponent(collection.name.toLowerCase())}`}
+                href={`/account/${collection.username}/collections/${encodeURIComponent(collection.name)}`}
                 className="block p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
               >
-                {collection.illustrationImage && (
+                {collection.thumbnailUrl && (
                   <div className="mb-3 relative w-full h-40 overflow-hidden rounded">
                     <Image 
-                      src={collection.illustrationImage} 
+                      src={collection.thumbnailUrl} 
                       alt={collection.name ? collection.name.substring(0, 40) : 'Collection'}
                       fill
                       style={{ objectFit: 'cover' }}

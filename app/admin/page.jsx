@@ -5,6 +5,7 @@ import { getDoc, increment, collection, getDocs, deleteDoc, doc, updateDoc } fro
 import { db } from '@/app/db/firebaseConfig';
 import { useRouter } from 'next/navigation'; // Use next/navigation instead of next/router
 import { useSession } from 'next-auth/react'; // Assuming you are using next-auth for authentication
+import FeaturedCollectionsManager from './components/FeaturedCollectionsManager';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -13,6 +14,7 @@ export default function AdminPage() {
   const [selectedPosts, setSelectedPosts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [postsPerPage] = useState(20); // Increased number of posts per page
+  const [collections, setCollections] = useState([]);
 
   useEffect(() => {
     if (status === 'loading') return; // Do nothing while loading
@@ -36,6 +38,21 @@ export default function AdminPage() {
     };
 
     fetchPosts();
+  }, []);
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      const collectionsRef = collection(db, 'collections');
+      const collectionsSnapshot = await getDocs(collectionsRef);
+      const fetchedCollections = collectionsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        isFeatured: doc.data().isFeatured || false // Ensure isFeatured is initialized
+      }));
+      setCollections(fetchedCollections);
+    };
+
+    fetchCollections();
   }, []);
 
   const handleSelectPost = (postId) => {
@@ -68,14 +85,22 @@ export default function AdminPage() {
     setSelectedPosts([]);
   };
 
- 
-
   const handleToggleHighlight = async (postId, currentHighlight) => {
     const postRef = doc(db, 'post', postId);
     await updateDoc(postRef, { highlight: currentHighlight ? 0 : 1 });
     setPosts(prevPosts =>
       prevPosts.map(post =>
         post.id === postId ? { ...post, highlight: currentHighlight ? 0 : 1 } : post
+      )
+    );
+  };
+
+  const handleToggleFeatured = async (collectionId, currentFeatured) => {
+    const collectionRef = doc(db, 'collections', collectionId);
+    await updateDoc(collectionRef, { isFeatured: !currentFeatured });
+    setCollections(prevCollections =>
+      prevCollections.map(collection =>
+        collection.id === collectionId ? { ...collection, isFeatured: !currentFeatured } : collection
       )
     );
   };
@@ -191,8 +216,27 @@ export default function AdminPage() {
           </div>
         ))}
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
+        {collections.map(collection => (
+          <div key={collection.id} className="border rounded p-4">
+            <p className="font-semibold">{collection.name}</p>
+            <button
+              className={`px-3 py-1 rounded mt-2 ${
+                collection.isFeatured ? 'bg-green-500 text-white' : 'bg-white text-black border border-black'
+              }`}
+              onClick={() => handleToggleFeatured(collection.id, collection.isFeatured)}
+            >
+              {collection.isFeatured ? 'Unfeature' : 'Feature'}
+            </button>
+          </div>
+        ))}
+      </div>
       <div className="flex justify-center gap-2 mt-6">
         {renderPagination()}
+      </div>
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">Manage Featured Collections</h2>
+        <FeaturedCollectionsManager />
       </div>
     </div>
   );

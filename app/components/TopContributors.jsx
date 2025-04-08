@@ -34,8 +34,7 @@ export default async function TopContributors() {
   const contributors = await getTopContributors();
   
   return (
-    <div className="bg-gray-100 rounded-xl p-8 flex flex-col justify-between items-start text-black py-4 space-y-2">
-      <h2 className="text-1xl font-bold">Top Contributors</h2>
+    <div className="h-full">
       <ClientTopContributors initialContributors={contributors} />
     </div>
   );

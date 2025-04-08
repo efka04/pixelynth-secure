@@ -26,8 +26,8 @@ export default function UserProfile({ session }) {
     // Affiche un placeholder tant que les données ne sont pas chargées
     if (!userData) {
       return (
-        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-          <FaUser className="text-gray-400" />
+        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+          <FaUser className="text-gray-400 text-xl" />
         </div>
       );
     }
@@ -37,8 +37,8 @@ export default function UserProfile({ session }) {
 
     return (
       <Image
-        width={32}
-        height={32}
+        width={48}
+        height={48}
         className="rounded-full border border-gray-200 object-cover"
         src={userImage}
         alt="User profile"
@@ -53,7 +53,7 @@ export default function UserProfile({ session }) {
   return (
     <Link
       href={`/account/${session.user.username}`}
-      className="flex items-center justify-center w-8 h-8"
+      className="flex items-center justify-center w-12 h-12"
     >
       {renderUserImage()}
     </Link>

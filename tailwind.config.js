@@ -6,7 +6,7 @@ module.exports = {
     theme: {
         extend: {
             fontFamily: {
-                ppNeueMachina: ['PPNeueMachina', 'sans-serif'],
+                kdamThmorPro: ['Kdam Thmor Pro', 'sans-serif'],
             },
         },
     },

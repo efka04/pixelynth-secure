@@ -36,7 +36,7 @@ export default function CategoryBar({ className, isSticky }) {
                         onClick={() => handleCategoryClick(cat)}
                         className="px-4 py-0 rounded-full transition-all"
                         style={{
-                            fontFamily: 'PPNeueMachina', // Apply font family
+                            fontFamily: 'Kdam Thmor Pro', // Apply font family
                             fontWeight: isSelected ? 300 : 300, // Bold when selected, Light otherwise
                             backgroundColor: isSelected ? color : 'white', // Show color when selected, white otherwise
                             border: isSelected ? 'none' : '1px solid black', // Remove border when selected
@@ -67,20 +67,15 @@ export default function CategoryBar({ className, isSticky }) {
 
     return (
         <div
-            className={`relative bg-white -translate-y-2 mb-0 ${
-                isSticky ? 'sticky top-[61px] z-30' : ''
+            className={`relative bg-red -translate-y-2 mb-0 ${
+                isSticky ? 'sticky top-[66px] z-30' : ''
             }`} // Adjust top to match header height
         >
-            <button
-                onClick={() => scroll('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-gradient-to-r from-white to-transparent w-5"
-            >
-                <FaChevronLeft className="text-xl -translate-x-1" />
-            </button>
+    
 
             <div
                 ref={categoriesRef}
-                className="overflow-x-auto whitespace-nowrap py-2 px-6 bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                className="overflow-x-auto whitespace-nowrap py-2 px-6 bg-red [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
                 <div className="flex gap-2"> {/* Reduced gap */}
                     <button
@@ -97,12 +92,7 @@ export default function CategoryBar({ className, isSticky }) {
                 </div>
             </div>
 
-            <button
-                onClick={() => scroll('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-r from-transparent to-white h-9 w-16"
-            >
-                <FaChevronRight className="text-xl translate-x-10" />
-            </button>
+    
         </div>
     );
 }

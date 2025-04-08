@@ -58,12 +58,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="application/ld+json">
           {JSON.stringify(schemaMarkup)}
         </script>
-
-        {/* Open Graph */}
-        <meta property="og:title" content="Pixelynth - Free AI-Generated Stock Images for commercial use" />
-        <meta property="og:description" content="Discover and download high-quality AI-generated stock images for free. Browse through categories like Food, Beauty, Fashion, and more. Start exploring now!" />
-        <meta property="og:image" content="/opengraph-image.jpg" />
-        <meta property="og:type" content="website" />
         
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
