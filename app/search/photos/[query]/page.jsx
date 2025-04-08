@@ -1,12 +1,13 @@
 'use client';
+
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useSearch } from '@/app/context/OptimizedSearchContext';
-import ArticleList from '@/app/components/ArticleList';
 import { useParams } from 'next/navigation';
-import FilterBar from '../../../components/filterBar/FilterBar';
+import { useSearch } from '@/app/context/OptimizedSearchContext';
 import { useColor } from '@/app/context/ColorContext';
 import { useCategory } from '@/app/context/CategoryContext';
 import { getEnhancedPostsPaginated } from '@/services/enhancedSearchService';
+import ArticleList from '@/app/components/ArticleList';
+import FilterBar from '../../../components/filterBar/FilterBar';
 
 export default function OptimizedSearchResults() {
     const { query } = useParams();
@@ -24,88 +25,70 @@ export default function OptimizedSearchResults() {
     const [lastDoc, setLastDoc] = useState(null);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(true);
-    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-    const [activeFilters, setActiveFilters] = useState([]);
+    const [totalResults, setTotalResults] = useState(0);
     
-    // Refs to track filter changes and prevent unnecessary loading states
-    const pendingSearchRef = useRef(false);
-    const searchTimeoutRef = useRef(null);
+    // Référence pour suivre les filtres actuels
     const currentFiltersRef = useRef({});
-
-    // Decode query parameter
+    // Référence pour le timeout de debounce
+    const debounceTimerRef = useRef(null);
+    
+    // Décoder le paramètre de requête
     useEffect(() => {
         if (query) {
-          // Première étape : décoder l'URL
           let decoded = decodeURIComponent(query);
-          // Deuxième étape : remplacer les tirets par des espaces
           decoded = decoded.replace(/-/g, ' ');
           setDecodedQuery(decoded);
           performSearch(decoded);
         }
-      }, [query, performSearch]);
+    }, [query, performSearch]);
 
-    // Update active filters list for better user feedback
-    useEffect(() => {
-        const filters = [];
-        if (selectedPeople && selectedPeople !== 'all') filters.push(`People: ${selectedPeople}`);
-        if (selectedOrientation && selectedOrientation !== 'all') filters.push(`Orientation: ${selectedOrientation}`);
-        if (selectedColor) filters.push(`Color: ${selectedColor}`);
-        if (selectedCategory) filters.push(`Category: ${selectedCategory}`);
-        if (selectedSort && selectedSort !== 'relevance') filters.push(`Sort: ${selectedSort}`);
-        setActiveFilters(filters);
-    }, [selectedPeople, selectedOrientation, selectedColor, selectedCategory, selectedSort]);
-
-    // Load filtered posts when any filter changes
-    const loadFilteredPosts = useCallback(async (reset = false) => {
+    // Charger les résultats avec debounce pour éviter le flickering
+    const loadResults = useCallback(async (reset = false) => {
         if (!decodedQuery) return;
         
-        // Don't set loading state if we're just loading more (not resetting)
-        if (reset && initialLoadComplete) {
-            pendingSearchRef.current = true;
+        if (reset) {
+            // Ne pas vider les posts immédiatement pour éviter le flickering
+            // Attendre d'avoir les nouveaux résultats avant de mettre à jour l'UI
+            setLoading(true);
         }
         
         try {
-            // Utiliser le nouveau service de recherche amélioré avec système de points
-            const { posts: newPosts, lastVisible } = await getEnhancedPostsPaginated(
+            const { posts: newPosts, lastVisible, hasMore: more, total } = await getEnhancedPostsPaginated(
                 reset ? null : lastDoc,
-                24,
+                100,
                 { 
                     selectedPeople, 
                     selectedOrientation, 
                     selectedColor, 
                     selectedCategory, 
                     selectedSort,
-                    searchQuery: decodedQuery // Add search query as an additional filter
+                    searchQuery: decodedQuery
                 }
             );
             
-            // Only update state if this is still the most recent search
-            if (pendingSearchRef.current || !initialLoadComplete) {
-                setPosts(prevPosts => reset ? newPosts : [...prevPosts, ...newPosts]);
-                setLastDoc(lastVisible);
-                setHasMore(newPosts.length === 24);
-                setInitialLoadComplete(true);
-                pendingSearchRef.current = false;
+            // Mettre à jour les posts seulement après avoir reçu les nouveaux résultats
+            if (reset) {
+                setPosts(newPosts);
+            } else {
+                setPosts(prevPosts => [...prevPosts, ...newPosts]);
             }
+            
+            setLastDoc(lastVisible);
+            setHasMore(more);
+            setTotalResults(total);
         } catch (error) {
-            console.error("Error loading filtered search results:", error);
-            if (pendingSearchRef.current || !initialLoadComplete) {
-                pendingSearchRef.current = false;
-            }
+            console.error("Erreur lors du chargement des résultats:", error);
         } finally {
             setLoading(false);
         }
-    }, [
-        decodedQuery, lastDoc, initialLoadComplete,
-        selectedPeople, selectedOrientation, selectedColor, selectedCategory, selectedSort
-    ]);
+    }, [decodedQuery, lastDoc, selectedPeople, selectedOrientation, selectedColor, selectedCategory, selectedSort]);
 
-    // Handle filter changes with advanced anti-flickering
+    // Utiliser un effet avec debounce pour éviter les requêtes multiples rapprochées
     useEffect(() => {
         if (!decodedQuery) return;
         
-        // Store current filters for comparison
-        const newFilters = {
+        // Créer un objet représentant les filtres actuels
+        const currentFilters = {
             query: decodedQuery,
             people: selectedPeople,
             orientation: selectedOrientation,
@@ -114,93 +97,77 @@ export default function OptimizedSearchResults() {
             sort: selectedSort
         };
         
-        // Check if filters have actually changed
-        const filtersChanged = JSON.stringify(newFilters) !== JSON.stringify(currentFiltersRef.current);
-        currentFiltersRef.current = newFilters;
+        // Vérifier si les filtres ont changé
+        const filtersChanged = JSON.stringify(currentFilters) !== JSON.stringify(currentFiltersRef.current);
+        currentFiltersRef.current = currentFilters;
         
-        if (!filtersChanged && initialLoadComplete) {
-            return; // Skip if filters haven't changed and initial load is done
+        if (!filtersChanged) return;
+        
+        // Annuler tout timer de debounce précédent
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
         }
         
-        // Clear any pending timeout
-        if (searchTimeoutRef.current) {
-            clearTimeout(searchTimeoutRef.current);
-        }
+        // Définir un nouveau timer de debounce (300ms)
+        debounceTimerRef.current = setTimeout(() => {
+            loadResults(true);
+            debounceTimerRef.current = null;
+        }, 300);
         
-        // Only show loading state on initial load
-        if (!initialLoadComplete) {
-            setLoading(true);
-        }
-        
-        // Debounce filter changes
-        searchTimeoutRef.current = setTimeout(() => {
-            loadFilteredPosts(true);
-            searchTimeoutRef.current = null;
-        }, 500);
-        
+        // Nettoyage
         return () => {
-            if (searchTimeoutRef.current) {
-                clearTimeout(searchTimeoutRef.current);
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
             }
         };
-    }, [decodedQuery, selectedPeople, selectedOrientation, selectedColor, selectedCategory, selectedSort, loadFilteredPosts, initialLoadComplete]);
+    }, [decodedQuery, selectedPeople, selectedOrientation, selectedColor, selectedCategory, selectedSort, loadResults]);
 
-    // Function to load more posts
+    // Fonction pour charger plus de résultats
     const handleLoadMore = useCallback(() => {
         if (!loading && hasMore) {
-            loadFilteredPosts(false);
+            loadResults(false);
         }
-    }, [loadFilteredPosts, loading, hasMore]);
-
-    // Determine what to display based on loading and results state
-    const renderContent = () => {
-        if (!initialLoadComplete && loading) {
-            return (
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-black" />
-                </div>
-            );
-        }
-        
-        if (posts.length === 0) {
-            return (
-                <div className="text-center py-12">
-                    <p className="text-xl text-gray-500">
-                        {activeFilters.length > 0 
-                            ? "No images found matching your filters" 
-                            : `No results found for "${decodedQuery}"`}
-                    </p>
-                    {activeFilters.length === 0 && (
-                        <p className="text-gray-400 mt-2">Try different keywords</p>
-                    )}
-                </div>
-            );
-        }
-        
-        return (
-            <ArticleList 
-                listPosts={posts} 
-                onLoadMore={handleLoadMore}
-                hasMore={hasMore}
-            />
-        );
-    };
+    }, [loadResults, loading, hasMore]);
 
     return (
-        
-        <main className="max-w-7xl mx-auto px-4 md:p-2">
-            <div className="max-w-7xl mx-auto px-4">
+        <main className="min-h-screen p-4 md:p-2">
+            <div className="max-w-7xl mx-auto">
                 <FilterBar />
                 <div className="flex justify-between items-center my-0 mb-2">
                     <h1 className="font-bold text-4xl"></h1>
-                    {initialLoadComplete && (
-                        <p className="text-gray-500">
-                            {posts.length} result{posts.length !== 1 ? 's' : ''}
-                        </p>
-                    )}
+                    <p className="text-gray-500">
+                        {posts.length} {totalResults > 0 ? `sur ${totalResults}` : ''} résultat{posts.length !== 1 ? 's' : ''}
+                    </p>
                 </div>
 
-                {renderContent()}
+                {loading && posts.length === 0 ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-black" />
+                    </div>
+                ) : posts.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-xl text-gray-500">
+                            Aucun résultat trouvé pour "{decodedQuery}" avec les filtres sélectionnés
+                        </p>
+                        <p className="text-gray-400 mt-2">
+                            Essayez de modifier vos filtres ou d'utiliser d'autres termes de recherche
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        {/* Overlay de chargement semi-transparent pendant le rechargement */}
+                        {loading && (
+                            <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10">
+                                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-black" />
+                            </div>
+                        )}
+                        <ArticleList 
+                            listPosts={posts} 
+                            onLoadMore={handleLoadMore}
+                            hasMore={hasMore}
+                        />
+                    </>
+                )}
             </div>
         </main>
     );
