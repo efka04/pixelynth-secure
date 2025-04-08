@@ -19,15 +19,13 @@ import LoadingSpinner from '@/app/components/ArticleList/LoadingSpinner';
 
 export default function CollectionDetail({ collectionId, userEmail, isUserNameNotEmail }) {
   const { data: session } = useSession();
-  // On renomme la variable d'état pour éviter le conflit avec la fonction Firestore "collection"
   const [collectionData, setCollectionData] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  // Par défaut, userEmail peut être un username, qui sera converti en email si nécessaire
   const [actualUserEmail, setActualUserEmail] = useState(userEmail);
+  const [updatingThumbnail, setUpdatingThumbnail] = useState(false);
 
-  // Convertit le username en email si besoin
   useEffect(() => {
     const convertUserNameToEmail = async () => {
       if (isUserNameNotEmail && userEmail) {
@@ -37,7 +35,6 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
           const querySnapshot = await getDocs(q);
           
           if (!querySnapshot.empty) {
-            // L'ID du document est l'email de l'utilisateur
             const email = querySnapshot.docs[0].id;
             setActualUserEmail(email);
           } else {
@@ -52,38 +49,32 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
     convertUserNameToEmail();
   }, [userEmail, isUserNameNotEmail]);
 
-  // Récupère la collection en recherchant le document dont le champ "name" correspond au paramètre collectionId (utilisé dans l'URL)
   useEffect(() => {
     const fetchCollectionAndImages = async () => {
       if (!actualUserEmail || !collectionId) {
         console.warn("actualUserEmail ou collectionId non défini:", actualUserEmail, collectionId);
         return;
       }
-      
-      // Si le username doit être converti et que la conversion n'est pas encore terminée,
-      // actualUserEmail sera toujours égal à userEmail (le username initial)
-      if (isUserNameNotEmail && actualUserEmail === userEmail) {
-        return;
-      }
-      
+
       setLoading(true);
       try {
         const collectionsRef = collection(db, 'users', actualUserEmail, 'collections');
-        // Normalisation de la casse : conversion en minuscules du paramètre collectionId
-        const normalizedCollectionName = collectionId.toLowerCase();
-        const q = query(collectionsRef, where('name', '==', normalizedCollectionName));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocs(collectionsRef);
         
-        if (querySnapshot.empty) {
+        const matchingCollection = querySnapshot.docs.find(doc => 
+          doc.data().name.toLowerCase() === decodeURIComponent(collectionId).toLowerCase()
+        );
+        
+        if (!matchingCollection) {
+          console.warn("Collection non trouvée:", collectionId);
           setCollectionData(null);
           setImages([]);
           return;
         }
-        
-        const collectionDoc = querySnapshot.docs[0];
+
         const data = {
-          id: collectionDoc.id,
-          ...collectionDoc.data()
+          id: matchingCollection.id,
+          ...matchingCollection.data()
         };
         
         setCollectionData(data);
@@ -121,12 +112,10 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
     fetchCollectionAndImages();
   }, [actualUserEmail, collectionId, session, userEmail, isUserNameNotEmail]);
   
-  // Fonction de suppression d'une image de la collection
   const handleRemoveImage = async (imageId) => {
     if (!isOwner || !collectionData) return;
     
     try {
-      // On utilise l'identifiant réel du document de la collection pour la mise à jour
       const collectionRef = doc(db, 'users', actualUserEmail, 'collections', collectionData.id);
       
       await updateDoc(collectionRef, {
@@ -142,6 +131,27 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
       
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'image de la collection:', error);
+    }
+  };
+
+  const handleSetThumbnail = async (imageUrl) => {
+    if (!isOwner || !collectionData) return;
+    
+    setUpdatingThumbnail(true);
+    try {
+      const collectionRef = doc(db, 'users', actualUserEmail, 'collections', collectionData.id);
+      await updateDoc(collectionRef, {
+        thumbnailUrl: imageUrl
+      });
+      
+      setCollectionData(prev => ({
+        ...prev,
+        thumbnailUrl: imageUrl
+      }));
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la vignette:', error);
+    } finally {
+      setUpdatingThumbnail(false);
     }
   };
 
@@ -175,6 +185,10 @@ export default function CollectionDetail({ collectionId, userEmail, isUserNameNo
           listPosts={images} 
           showRemoveButton={isOwner}
           onRemoveImage={handleRemoveImage}
+          showSetThumbnail={isOwner}
+          onSetThumbnail={handleSetThumbnail}
+          currentThumbnailUrl={collectionData.thumbnailUrl}
+          updatingThumbnail={updatingThumbnail}
         />
       )}
     </div>

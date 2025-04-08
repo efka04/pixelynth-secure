@@ -7,7 +7,7 @@ import ArticleGrid from "./ArticleList/ArticleGrid";
 
 const ITEMS_PER_PAGE = 24;
 
-const ArticleList = React.memo(({ listPosts }) => {
+const ArticleList = React.memo(({ listPosts, showRemoveButton, onRemoveImage }) => {
   const [displayedItems, setDisplayedItems] = useState(ITEMS_PER_PAGE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -71,7 +71,12 @@ const ArticleList = React.memo(({ listPosts }) => {
       ) : uniquePosts.length === 0 ? (
         <NoResults />
       ) : (
-        <ArticleGrid posts={visiblePosts} loadingRef={displayedItems < uniquePosts.length ? loadingRef : null} />
+        <ArticleGrid 
+          posts={visiblePosts} 
+          loadingRef={displayedItems < uniquePosts.length ? loadingRef : null} 
+          showRemoveButton={showRemoveButton}
+          onRemoveImage={onRemoveImage}
+        />
       )}
     </div>
   );

@@ -15,7 +15,7 @@ const breakpointColumns = {
 };
 
 
-const ArticleGrid = ({ posts, loadingRef }) => {
+const ArticleGrid = ({ posts, loadingRef, showRemoveButton, onRemoveImage }) => {
   // Preload images only for the first few posts
   const imagesToPreload = useMemo(() => posts.slice(0, 9), [posts]);
   usePreloadImages(imagesToPreload);
@@ -38,6 +38,8 @@ const ArticleGrid = ({ posts, loadingRef }) => {
               index={index}
               priority={index < 9} // Priority for first 6 items
               loading={index < 24 ? 'eager' : 'lazy'} // Load the first 24 eagerly
+              showRemoveButton={showRemoveButton}
+              onRemoveImage={onRemoveImage}
             />
           </div>
         ))}

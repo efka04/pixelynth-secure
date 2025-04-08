@@ -7,6 +7,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import { AiOutlineClose } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import UserProfile from "./header/UserProfile";
+import BurgerMenu from "./header/BurgerMenu";
 import Link from "next/link";
 
 export default function Header() {
@@ -157,89 +158,10 @@ export default function Header() {
               </Link>
             )}
             
-            <div className="relative h-12 flex items-center" ref={menuRef}>
-              <button 
-                onClick={toggleMenu}
-                className="bg-white rounded-full h-12 px-4 border border-black hover:bg-gray-100 transition-colors flex items-center gap-2"
-                aria-expanded={menuOpen}
-                aria-haspopup="true"
-                aria-controls="header-menu"
-              >
-                <span className="font-medium whitespace-nowrap hidden md:inline">Menu</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-              
-              {menuOpen && (
-                <div 
-                  id="header-menu"
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200 top-full"
-                  role="menu"
-                  aria-orientation="vertical"
-                  aria-labelledby="menu-button"
-                >
-                  <Link 
-                    href="/"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                    tabIndex={0}
-                  >
-                    Home
-                  </Link>
-                  <Link 
-                    href="/about"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                    tabIndex={0}
-                  >
-                    About
-                  </Link>
-                  <Link 
-                    href="/contact"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                    tabIndex={0}
-                  >
-                    Contact
-                  </Link>
-                  
-                  {session?.user ? (
-                    <button 
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                      role="menuitem"
-                      tabIndex={0}
-                    >
-                      Log out
-                    </button>
-                  ) : (
-                    <Link 
-                      href="/signin"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                      role="menuitem"
-                      onClick={() => setMenuOpen(false)}
-                      tabIndex={0}
-                    >
-                      Log in
-                    </Link>
-                  )}
-                  
-                  <div className="border-t border-gray-200 mt-1 pt-1">
-                    <div className="flex justify-center gap-2 py-2">
-                      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
-                        <FaInstagram size={18} />
-                      </a>
-                      <a href="https://pinterest.com" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
-                        <FaPinterest size={18} />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div className="h-12 flex items-center">
+              <div className="bg-white rounded-full h-12 px-4 border border-black hover:bg-gray-100 transition-colors flex items-center">
+                <BurgerMenu />
+              </div>
             </div>
           </div>
         </div>
