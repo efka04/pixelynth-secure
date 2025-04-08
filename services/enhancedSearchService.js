@@ -1,52 +1,46 @@
 // services/enhancedSearchService.js
-import { collection, query, orderBy, limit, startAfter, getDocs, where, or, and } from "firebase/firestore";
+import { collection, query, orderBy, limit, startAfter, getDocs, where } from "firebase/firestore";
 import { db } from '../app/db/firebaseConfig';
 
 /**
- * Divise une requête de recherche en termes individuels et génère leurs variantes (pluriels/singuliers)
- * @param {string} query - Requête de recherche complète
- * @returns {Array} - Tableau de termes individuels et leurs variantes
+ * Divise une requête de recherche en termes individuels et génère leurs variantes
+ * @param {string} searchQuery - Requête de recherche complète
+ * @returns {Object} - Termes originaux et leurs variantes
  */
-export const splitSearchQuery = (query) => {
-  if (!query || typeof query !== 'string') return [];
+export const splitSearchQuery = (searchQuery) => {
+  if (!searchQuery || typeof searchQuery !== 'string') return { originalTerms: [], allTerms: [] };
   
   // Normaliser la requête et la diviser en mots
-  const terms = query
+  const terms = searchQuery
     .trim()
     .toLowerCase()
     .split(/\s+/)
     .filter(term => term.length > 0);
   
-  // Générer les variantes (singulier/pluriel) pour chaque terme
+  // Générer les variantes pour chaque terme
   const termsWithVariants = [];
   const processedTerms = new Set(); // Pour éviter les doublons
   
   terms.forEach(term => {
-    // Ajouter le terme original s'il n'est pas déjà traité
+    // Ajouter le terme original
     if (!processedTerms.has(term)) {
       termsWithVariants.push(term);
       processedTerms.add(term);
       
-      // Générer et ajouter le pluriel si le terme se termine par une consonne
+      // Ajouter des variantes simples
       if (!term.endsWith('s')) {
         const plural = term + 's';
         termsWithVariants.push(plural);
-        processedTerms.add(plural);
-      }
-      // Générer et ajouter le singulier si le terme se termine par 's'
-      else if (term.length > 1 && term.endsWith('s')) {
+      } else if (term.length > 1) {
         const singular = term.slice(0, -1);
-        if (singular.length > 1) { // Éviter les termes trop courts
-          termsWithVariants.push(singular);
-          processedTerms.add(singular);
-        }
+        termsWithVariants.push(singular);
       }
     }
   });
   
   return {
-    originalTerms: terms,           // Termes originaux de la recherche
-    allTerms: termsWithVariants     // Tous les termes avec leurs variantes
+    originalTerms: terms,
+    allTerms: termsWithVariants
   };
 };
 
@@ -54,14 +48,14 @@ export const splitSearchQuery = (query) => {
  * Récupère les posts avec pagination et système de points pour les recherches multi-termes
  * @param {object} lastDoc - Dernier document pour la pagination
  * @param {number} pageSize - Nombre de résultats par page
- * @param {object} filters - Filtres à appliquer (couleur, orientation, etc.)
+ * @param {object} filters - Filtres à appliquer
  * @returns {Promise<{posts: Array, lastVisible: object}>} - Posts et dernier document visible
  */
 export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 24, filters = {}) {
   try {
+    console.log("Début de la recherche avec filtres:", filters);
     const postsRef = collection(db, "post");
     let filterConstraints = [];
-    let otherConstraints = [];
     
     // Appliquer les filtres standards
     if (filters.userEmail) {
@@ -84,118 +78,129 @@ export async function getEnhancedPostsPaginated(lastDoc = null, pageSize = 24, f
     let searchTermsInfo = { originalTerms: [], allTerms: [] };
     if (filters.searchQuery) {
       searchTermsInfo = splitSearchQuery(filters.searchQuery);
+      console.log("Termes de recherche:", searchTermsInfo);
+    }
+    
+    // Approche alternative pour les recherches multi-termes
+    if (searchTermsInfo.allTerms && searchTermsInfo.allTerms.length > 0) {
+      console.log("Utilisation de l'approche multi-requêtes");
+      // Utiliser une Map pour stocker les résultats uniques
+      const allResults = new Map();
       
-      // Si nous avons des termes de recherche, créer une condition OR pour chaque terme et ses variantes
-      if (searchTermsInfo.allTerms.length > 0) {
-        const tagConditions = searchTermsInfo.allTerms.map(term => 
-          where("tags", "array-contains", term)
-        );
+      // Pour chaque terme, faire une requête séparée
+      const searchPromises = searchTermsInfo.allTerms.map(async (term) => {
+        console.log("Recherche pour le terme:", term);
         
-        // Ajouter la condition OR aux contraintes
-        if (tagConditions.length === 1) {
-          filterConstraints.push(tagConditions[0]);
-        } else if (tagConditions.length > 1) {
-          filterConstraints.push(or(...tagConditions));
+        // Créer une requête de base
+        let termQuery = query(postsRef);
+        
+        // Appliquer les filtres standards un par un
+        for (const constraint of filterConstraints) {
+          termQuery = query(termQuery, constraint);
         }
-      }
-    }
-    
-    // Appliquer le tri en fonction de `selectedSort`
-    if (filters.selectedSort === "newest") {
-      otherConstraints.push(orderBy("timestamp", "desc"));
-    } else if (filters.selectedSort === "popular") {
-      otherConstraints.push(orderBy("downloadCount", "desc"));
-    } else {
-      otherConstraints.push(orderBy("highlight", "desc"), orderBy("timestamp", "desc"));
-    }
-    
-    // Pagination
-    if (lastDoc) {
-      otherConstraints.push(startAfter(lastDoc));
-    }
-    
-    // Récupérer plus de résultats que nécessaire pour le scoring
-    otherConstraints.push(limit(pageSize * 3));
-    
-    // Exécuter la requête avec and() pour les filtres
-    let qFinal;
-    if (filterConstraints.length > 0) {
-      qFinal = query(postsRef, and(...filterConstraints), ...otherConstraints);
-    } else {
-      qFinal = query(postsRef, ...otherConstraints);
-    }
-    
-    const snapshot = await getDocs(qFinal);
-    
-    // Transformer les documents en objets avec des scores
-    let posts = snapshot.docs.map(doc => {
-      const data = doc.data();
-      const post = {
-        id: doc.id,
-        ...data,
-        _score: 0, // Score initial
-        _exactMatchCount: 0, // Compteur de mots exacts trouvés (termes originaux uniquement)
-        _matchedTerms: new Set() // Ensemble des termes originaux qui ont été trouvés
-      };
-      
-      // Si nous avons des termes de recherche, calculer le score
-      if (searchTermsInfo.originalTerms.length > 0) {
-        const postTags = (data.tags || []).map(tag => tag.toLowerCase());
         
-        // Vérifier la correspondance exacte avec la requête complète
-        const fullQuery = filters.searchQuery.toLowerCase();
-        if (postTags.includes(fullQuery)) {
-          post._score += 10; // Score élevé pour une correspondance exacte
-          // Tous les termes originaux sont considérés comme trouvés
-          searchTermsInfo.originalTerms.forEach(term => post._matchedTerms.add(term));
+        // Ajouter la contrainte de recherche pour ce terme
+        termQuery = query(termQuery, where("tags", "array-contains", term));
+        
+        // Appliquer le tri
+        if (filters.selectedSort === "newest") {
+          termQuery = query(termQuery, orderBy("timestamp", "desc"));
+        } else if (filters.selectedSort === "popular") {
+          termQuery = query(termQuery, orderBy("downloadCount", "desc"));
         } else {
-          // Pour chaque tag, vérifier s'il correspond à un terme original ou sa variante
-          postTags.forEach(tag => {
-            // Vérifier chaque terme original
-            searchTermsInfo.originalTerms.forEach(originalTerm => {
-              // Si le tag correspond exactement au terme original ou à sa variante
-              if (tag === originalTerm || 
-                  (originalTerm + 's' === tag) || 
-                  (originalTerm.endsWith('s') && originalTerm.slice(0, -1) === tag)) {
-                post._score += 5;
-                post._matchedTerms.add(originalTerm);
-              }
-            });
-          });
+          termQuery = query(termQuery, orderBy("timestamp", "desc"));
         }
         
-        // Mettre à jour le compteur de mots exacts trouvés
-        post._exactMatchCount = post._matchedTerms.size;
+        // Limiter les résultats pour cette requête
+        termQuery = query(termQuery, limit(pageSize * 2));
+        
+        // Exécuter la requête
+        const termSnapshot = await getDocs(termQuery);
+        console.log(`Résultats pour "${term}":`, termSnapshot.docs.length);
+        
+        // Traiter les résultats
+        termSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          
+          // Si le document existe déjà dans les résultats, mettre à jour son score
+          if (allResults.has(doc.id)) {
+            const existingPost = allResults.get(doc.id);
+            existingPost._score += 5;
+            existingPost._matchedTerms.add(term);
+            existingPost._exactMatchCount = existingPost._matchedTerms.size;
+          } else {
+            // Sinon, ajouter le nouveau document
+            const post = {
+              id: doc.id,
+              ...data,
+              _score: 5,
+              _matchedTerms: new Set([term]),
+              _exactMatchCount: 1
+            };
+            allResults.set(doc.id, post);
+          }
+        });
+      });
+      
+      // Attendre que toutes les requêtes soient terminées
+      await Promise.all(searchPromises);
+      
+      // Convertir la Map en tableau
+      let posts = Array.from(allResults.values());
+      console.log("Nombre total de résultats uniques:", posts.length);
+      
+      // Trier par score si le tri est par pertinence
+      if (filters.selectedSort === "relevance") {
+        posts.sort((a, b) => b._score - a._score);
       }
       
-      return post;
-    });
-    
-    // Filtrer les posts en fonction du nombre de mots dans la recherche
-    if (searchTermsInfo.originalTerms.length > 0) {
-      if (searchTermsInfo.originalTerms.length >= 2) {
-        // Pour 2 mots ou plus, exiger au moins 2 mots exacts (ou leurs variantes) dans les tags
-        posts = posts.filter(post => post._exactMatchCount >= 2);
-      } else {
-        // Pour 1 mot, exiger au moins 1 mot exact (ou sa variante) dans les tags
-        posts = posts.filter(post => post._exactMatchCount >= 1);
+      // Limiter aux résultats demandés
+      posts = posts.slice(0, pageSize);
+      
+      return { posts, lastVisible: null };
+    } else {
+      console.log("Utilisation de l'approche standard sans termes de recherche");
+      // Recherche standard sans termes de recherche
+      
+      // Créer une requête de base
+      let qFinal = query(postsRef);
+      
+      // Appliquer les filtres un par un
+      for (const constraint of filterConstraints) {
+        qFinal = query(qFinal, constraint);
       }
+      
+      // Appliquer le tri
+      if (filters.selectedSort === "newest") {
+        qFinal = query(qFinal, orderBy("timestamp", "desc"));
+      } else if (filters.selectedSort === "popular") {
+        qFinal = query(qFinal, orderBy("downloadCount", "desc"));
+      } else {
+        qFinal = query(qFinal, orderBy("timestamp", "desc"));
+      }
+      
+      // Pagination
+      if (lastDoc) {
+        qFinal = query(qFinal, startAfter(lastDoc));
+      }
+      
+      // Limiter les résultats
+      qFinal = query(qFinal, limit(pageSize));
+      
+      const snapshot = await getDocs(qFinal);
+      console.log("Nombre de résultats standard:", snapshot.docs.length);
+      
+      // Transformer les documents en objets
+      const posts = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // Récupérer le dernier document pour la pagination
+      const lastVisible = posts.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+      
+      return { posts, lastVisible };
     }
-    
-    // Trier par score si nous avons des termes de recherche et le tri est par pertinence
-    if (searchTermsInfo.originalTerms.length > 0 && filters.selectedSort === "relevance") {
-      posts.sort((a, b) => b._score - a._score);
-    }
-    
-    // Limiter aux résultats demandés
-    posts = posts.slice(0, pageSize);
-    
-    // Récupérer le dernier document pour la pagination
-    const lastVisible = posts.length > 0 
-      ? snapshot.docs.find(doc => doc.id === posts[posts.length - 1].id) 
-      : null;
-    
-    return { posts, lastVisible };
   } catch (error) {
     console.error('Erreur lors de la recherche améliorée:', error);
     return { posts: [], lastVisible: null };

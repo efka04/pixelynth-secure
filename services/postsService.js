@@ -1,4 +1,5 @@
-import { collection, query, orderBy, limit, startAfter, getDocs, where, and } from "firebase/firestore";
+// Modification du fichier postsService.js
+import { collection, query, orderBy, limit, startAfter, getDocs, where, and, or } from "firebase/firestore";
 import { db } from '../app/db/firebaseConfig';
 
 export async function getPostsPaginated(lastDoc = null, pageSize = 20, filters = {}) {
@@ -8,16 +9,14 @@ export async function getPostsPaginated(lastDoc = null, pageSize = 20, filters =
   let filterConstraints = [];
   let otherConstraints = [];
 
-  // 🔍 DEBUG: Vérifier le tri sélectionné
-  console.log("Fetching posts with sort:", filters.selectedSort);
-
   // Appliquer le tri en fonction de `selectedSort`
   if (filters.selectedSort === "newest") {
-    otherConstraints.push(orderBy("timestamp", "desc")); // Trier uniquement par date
+    otherConstraints.push(orderBy("timestamp", "desc"));
   } else if (filters.selectedSort === "popular") {
-    otherConstraints.push(orderBy("downloadCount", "desc")); // Trier par le nombre de téléchargements
+    otherConstraints.push(orderBy("downloadCount", "desc"));
   } else {
-    otherConstraints.push(orderBy("highlight", "desc"), orderBy("timestamp", "desc")); // Par défaut (relevance)
+    // Par défaut, on utilise highlight mais on s'assure que tous les documents sont inclus
+    otherConstraints.push(orderBy("highlight", "desc"));
   }
 
   // Filtrer les résultats selon les critères sélectionnés
@@ -57,7 +56,26 @@ export async function getPostsPaginated(lastDoc = null, pageSize = 20, filters =
   }
   
   const snapshot = await getDocs(qFinal);
-  const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+  // Récupérer tous les posts
+  let posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+  // Trier manuellement pour mettre les highlight=1 en premier, puis par timestamp
+  posts.sort((a, b) => {
+    // D'abord par highlight (1 avant 0 ou undefined)
+    const highlightA = a.highlight === 1 ? 1 : 0;
+    const highlightB = b.highlight === 1 ? 1 : 0;
+    
+    if (highlightA !== highlightB) {
+      return highlightB - highlightA; // Ordre décroissant pour highlight
+    }
+    
+    // Ensuite par timestamp (du plus récent au plus ancien)
+    const timeA = a.timestamp?.seconds || 0;
+    const timeB = b.timestamp?.seconds || 0;
+    return timeB - timeA;
+  });
+  
   const lastVisible = snapshot.docs[snapshot.docs.length - 1];
 
   return { posts, lastVisible };

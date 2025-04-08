@@ -19,8 +19,6 @@ export default function Header() {
   const menuRef = useRef(null);
 
   // Simulate result count for display purposes
-  const resultCount = 241;
-
   useEffect(() => {
     setIsMounted(true);
     
@@ -120,11 +118,7 @@ export default function Header() {
                   aria-label="Search"
                 />
                 <div className="flex items-center mr-2 h-full">
-                  {hasSearched && (
-                    <div className="bg-black text-white text-sm font-medium rounded-full px-4 py-1 mr-2">
-                      {resultCount}
-                    </div>
-                  )}
+               
                   {searchTerm && (
                     <button
                       type="button"

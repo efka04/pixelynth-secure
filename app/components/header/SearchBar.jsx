@@ -36,7 +36,8 @@ export default function SearchBar() {
         if (e.key === 'Enter') {   
             e.preventDefault();
             if (searchTerm.trim()) {
-                router.push(`/search/photos/${searchTerm.trim()}`);
+                const encodedSearchTerm = encodeURIComponent(searchTerm.trim().replace(/\s+/g, '-'));
+                router.push(`/search/photos/${encodedSearchTerm}`);
             }
             resetFilters();
         }

@@ -301,13 +301,14 @@ export function SearchProvider({ children }) {
       }
     });
     
-    // Mettre à jour l'état avec les termes originaux pour l'affichage
-    setCurrentSearchTerm(filteredTerms.join(' '));
-    // Mais utiliser les termes enrichis pour la recherche
-    setCurrentSearchTerms(enrichedTerms);
-    
-    // Lancer la recherche avec les termes enrichis
-    await loadInitialPosts(enrichedTerms);
+    // Assurez-vous que les termes de recherche sont uniques et en minuscules
+    const uniqueTerms = [...new Set(enrichedTerms.map(term => term.toLowerCase()))];
+
+    // Mettre à jour l'état avec les termes enrichis uniques
+    setCurrentSearchTerms(uniqueTerms);
+
+    // Lancer la recherche avec les termes enrichis uniques
+    await loadInitialPosts(uniqueTerms);
   }, [loadInitialPosts]);
 
   // Recharger les posts dès que les filtres ou le terme de recherche changent
