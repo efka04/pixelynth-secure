@@ -188,8 +188,8 @@ export default function OptimizedSearchResults() {
 
     return (
         
-        <main className="min-h-screen p-4 md:p-2">
-            <div className="max-w-7xl mx-auto">
+        <main className="max-w-7xl mx-auto px-4 md:p-2">
+            <div className="max-w-7xl mx-auto px-4">
                 <FilterBar />
                 <div className="flex justify-between items-center my-0 mb-2">
                     <h1 className="font-bold text-4xl"></h1>
