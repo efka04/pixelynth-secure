@@ -12,8 +12,14 @@ export default function RootPage() {
         <div className="max-w-7xl mx-auto px-4">
           {/* Grille principale avec effet masonry */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 mb-8 grid-flow-dense">
-            {/* Section Hero - occupe 5 colonnes sur grand écran */}
-            <div className="lg:col-span-5 bg-black rounded-xl p-6 flex flex-col justify-center">
+            <div
+              className="lg:col-span-5 rounded-xl p-6 flex flex-col justify-center"
+              style={{
+                backgroundImage: 'url("/Rectangle 1.jpg")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
               <h1 className="text-5xl mt-2 text-left text-white">
                 Free AI-generated Stock Images
               </h1>
@@ -21,8 +27,7 @@ export default function RootPage() {
                 Download high-quality, royalty-free AI-generated stock images for your commercial and personal projects.
               </p>
             </div>
-            
-            {/* Image of the Day - occupe 3 colonnes et 2 lignes sur grand écran */}
+
             <div className="lg:col-span-3 lg:row-span-2">
               <Suspense fallback={<div className="bg-gray-100 rounded-xl p-4 h-full min-h-[400px]">Loading image of the day...</div>}>
                 <ImageOfTheDay />
