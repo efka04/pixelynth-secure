@@ -1,13 +1,17 @@
-@import '@/styles/fonts.css';; /* Adjusted path to match the project structure */
 @import url('https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --font-kdam-thmor-pro: 'Kdam Thmor Pro', sans-serif;
+  --font-family: 'Kdam Thmor Pro', sans-serif;
+}
+
+@layer base {
+  html, body {
+    font-family: var(--font-family) !important;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -18,22 +22,10 @@
   }
 }
 
-* {
-  font-family: var(--font-kdam-thmor-pro) !important;
-}
-
 body {
-  font-family: "Kdam Thmor Pro", sans-serif;
-  @apply font-kdamThmorPro;
   color: var(--foreground);
   background: var(--background); /* Use your intended background variable */
   font-weight: 300; /* Light */
-}
-
-h1 {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-kdam-thmor-pro);
 }
 
 /* Ensure grid styles are properly handled */

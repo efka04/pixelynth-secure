@@ -9,7 +9,7 @@ function ClientTopContributors({ initialContributors }) {
 
   return (
     <>
-      <h2 className="text-lg border-[1px] border-black rounded-2xl font-semibold mb-3 inline-block px-2">Top Contributors</h2>
+      <h2 className="text-sm font-medium px-3 py-1 border-[1px] border-black rounded-2xl font-semibold inline-block ">Top Contributors</h2>
       <ul className="space-y-1">
         {contributors.length > 0 ? (
           contributors.map((user, index) => (

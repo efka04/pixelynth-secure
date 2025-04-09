@@ -25,7 +25,7 @@ export default function TopSearches() {
 
   return (
     <div className="bg-[#D9D0EB] rounded-xl p-4 h-full">
-      <h2 className="text-lg border-[1px] border-black rounded-2xl font-semibold mb-3 inline-block px-2">Top Searches</h2>
+      <h2 className="text-sm font-medium border-[1px] border-black rounded-2xl font-semibold mb-3 inline-block px-3 py-1">Top Searches</h2>
       <div className="flex flex-wrap gap-2">
         {featuredTags.length > 0 ? (
           featuredTags.map((tag, index) => (

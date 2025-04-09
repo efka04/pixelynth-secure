@@ -40,7 +40,7 @@ export default function TopCollections() {
 
   return (
     <div className="bg-gray-100 rounded-xl p-4 h-full">
-      <h2 className="text-lg border-[1px] border-black rounded-2xl font-semibold mb-3 inline-block px-2">Top Collections</h2>
+      <h2 className="text-sm font-medium border-[1px] border-black rounded-2xl font-semibold px-3 py-1 inline-block">Top Collections</h2>
       <div className="space-y-3">
         {collections.map((collection) => (
           <Link 

@@ -26,7 +26,7 @@ export default function ImageOfTheDay() {
           imagesRef,
           where('orientation', '==', 'vertical'),
           where('highlight', '==', 1),
-          limit(10)
+          limit(3)
         );
         const snapshot = await getDocs(q);
 
