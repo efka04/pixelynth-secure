@@ -86,24 +86,28 @@ export default function Header() {
   }
 
   return (
-    <header className="fixed top-2 w-full z-50 px-4">
-      <nav className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between flex-wrap md:flex-nowrap h-12">
-          <button 
-            onClick={handleLogoClick} 
-            className="bg-white rounded-full h-12 px-4 flex items-center gap-2 hover:bg-gray-100 transition-colors border border-black flex-shrink-0"
-          >
-            <span className="font-bold text-black text-lg whitespace-nowrap" style={{ fontFamily: 'Kdam Thmor Pro, sans-serif', fontWeight: 800 }}>
-              Pixelynth
-            </span>
-            <span className="bg-white rounded-full p-1 border border-black">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </span>
-          </button>
-          
-          <div className="flex-1 mx-2 w-full md:w-auto order-last md:order-none mt-2 md:mt-0">
+    <header className="fixed top-2 w-full z-50 px-2 md:px-4">
+      <nav className="max-w-7xl mx-auto md:px-4">
+        <div className="flex items-center justify-between gap-2 h-12">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <button 
+              onClick={handleLogoClick} 
+              className="bg-white rounded-full h-12 px-4 flex items-center gap-2 hover:bg-gray-100 transition-colors border border-black"
+            >
+              <span className="font-bold text-black text-lg whitespace-nowrap" style={{ fontFamily: 'Kdam Thmor Pro, sans-serif', fontWeight: 800 }}>
+                Pixelynth
+              </span>
+              <span className="hidden md:block bg-white rounded-full p-1 border border-black">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+            </button>
+          </div>
+
+          {/* Desktop Search bar */}
+          <div className="hidden md:block flex-1 mx-2">
             <form onSubmit={(e) => e.preventDefault()} className="relative w-full h-12">
               <div className="bg-white border border-black rounded-full flex items-center w-full h-full overflow-hidden">
                 <div className="flex-shrink-0 pl-4">
@@ -134,8 +138,41 @@ export default function Header() {
               </div>
             </form>
           </div>
+
+          {/* Mobile Search bar */}
+          <div className="flex-1 md:hidden">
+            <form onSubmit={(e) => e.preventDefault()} className="relative w-full h-12">
+              <div className="bg-white border border-black rounded-full flex items-center w-full h-full overflow-hidden">
+                <div className="flex-shrink-0 pl-4">
+                  <IoSearchOutline className="text-xl text-gray-700" />
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search..."
+                  className="bg-transparent outline-none w-full h-full px-3 text-sm"
+                  aria-label="Search"
+                />
+                {searchTerm && (
+                  <div className="flex items-center mr-2">
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="bg-white rounded-full p-2 border border-black hover:bg-gray-100 transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <AiOutlineClose className="text-xl" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </form>
+          </div>
           
-          <div className="flex items-center gap-2 flex-shrink-0 h-12">
+          {/* Right section */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             {session?.user ? (
               <>
                 <button
@@ -159,7 +196,7 @@ export default function Header() {
             )}
             
             <div className="h-12 flex items-center">
-              <div className="bg-white rounded-full h-12 px-4 border border-black hover:bg-gray-100 transition-colors flex items-center">
+              <div className="bg-white rounded-full h-12 px-2 md:px-4 border border-black hover:bg-gray-100 transition-colors flex items-center">
                 <BurgerMenu />
               </div>
             </div>

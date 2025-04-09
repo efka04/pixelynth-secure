@@ -34,13 +34,13 @@ export default function BurgerMenu() {
     ];
 
     return (
-        <div className="mr-auto relative" ref={menuRef}>
+        <div className="relative" ref={menuRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="p-1 py-2 hover:bg-gray-100 rounded-full transition-colors flex items-center gap-2"
                 aria-label="Menu"
             >
-                <span>Menu</span>
+                <span className="hidden md:inline">Menu</span>
                 {isOpen ? 
                     <RxCross2 className="w-4 h-4" /> :
                     <RxHamburgerMenu className="w-4 h-4" />
@@ -48,7 +48,7 @@ export default function BurgerMenu() {
             </button>
 
             {isOpen && (
-                <div className="absolute left-0 top-full border border-black mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden z-50">
+                <div className="absolute right-0 top-full border border-black mt-2 w-48 bg-white shadow-lg rounded-md overflow-hidden z-50">
                     <nav className="py-2">
                         {/* Navigation Links d'abord */}
                         {navigationLinks.map((link) => (
