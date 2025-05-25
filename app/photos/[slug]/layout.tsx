@@ -42,6 +42,9 @@ export async function generateMetadata(
     title: `Free Photo of a ${photo.title} | Pixelynth`,
     description: `Discover this AI-generated image on Pixelynth. Download it for free for commercial or personal use.`,
     keywords: "AI images, stock photos, free images, artificial intelligence, digital art, stock images, AI generated images, AI pictures, royalty-free, commercial use",
+    alternates: {
+      canonical: `https://www.pixelynth.com/photos/${slug}`,
+    }, 
     openGraph: {
         title: photo.title || 'Pixelynth Photo',
         description: photo.description || `Discover this AI-generated image on Pixelynth. Download it for free for commercial or personal use.`,
