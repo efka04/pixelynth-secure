@@ -1,9 +1,13 @@
-// functions/index.js
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
 exports.searchPosts = functions.https.onCall(async (data, context)  => {
+  // Vérification de l'authentification
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'La requête doit être authentifiée.');
+  }
+
   // Paramètres de recherche
   const { 
     searchQuery, 
@@ -16,6 +20,32 @@ exports.searchPosts = functions.https.onCall(async (data, context)  => {
     pageSize = 24
   } = data;
   
+  // Validation des entrées
+  if (typeof searchQuery !== 'string' && searchQuery !== undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'searchQuery doit être une chaîne de caractères.');
+  }
+  if (typeof selectedPeople !== 'string' && selectedPeople !== undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'selectedPeople doit être une chaîne de caractères.');
+  }
+  if (typeof selectedOrientation !== 'string' && selectedOrientation !== undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'selectedOrientation doit être une chaîne de caractères.');
+  }
+  if (typeof selectedColor !== 'string' && selectedColor !== undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'selectedColor doit être une chaîne de caractères.');
+  }
+  if (typeof selectedCategory !== 'string' && selectedCategory !== undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'selectedCategory doit être une chaîne de caractères.');
+  }
+  if (typeof selectedSort !== 'string' && selectedSort !== undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'selectedSort doit être une chaîne de caractères.');
+  }
+  if (typeof lastDoc !== 'string' && lastDoc !== undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'lastDoc doit être une chaîne de caractères.');
+  }
+  if (typeof pageSize !== 'number' || pageSize <= 0 || pageSize > 100) { // Limiter pageSize pour éviter l'abus
+    throw new functions.https.HttpsError('invalid-argument', 'pageSize doit être un nombre positif et ne pas dépasser 100.');
+  }
+
   try {
     const postsRef = admin.firestore().collection('post');
     let query = postsRef;
@@ -159,3 +189,5 @@ exports.searchPosts = functions.https.onCall(async (data, context)  => {
     throw new functions.https.HttpsError('internal', 'Erreur lors de la recherche', error.message) ;
   }
 });
+
+

@@ -124,15 +124,16 @@ export default function AccountPage() {
           <h1 className='text-3xl font-bold mb-2'>{userData.username}</h1>
           <p className='text-gray-600 mb-4'>{userData.bio}</p>
           <div className='flex flex-col gap-2'>
-            {userData.instagram && (
+             {userData.instagram && (
+              // 🔐 On encode userData.instagram dans l'URL pour neutraliser tout caractère dangereux
               <Link
-                href={`https://instagram.com/${userData.instagram}`}
+                href={`https://instagram.com/${encodeURIComponent(userData.instagram)}`}
                 target='_blank'
                 className='text-blue-500 hover:underline'
               >
                 @{userData.instagram}
               </Link>
-            )}
+           )}
             <span className='text-gray-600'>
               <strong>{userData.photoCount}</strong> photos
             </span>

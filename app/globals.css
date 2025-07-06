@@ -1,16 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --font-family: 'Kdam Thmor Pro', sans-serif;
 }
 
 @layer base {
   html, body {
-    font-family: var(--font-family) !important;
+    font-family: var(--font-geist-sans); /* Utilisation de la variable CSS de Next.js pour la police de base */
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-geist-mono); /* Utilisation de la variable CSS de Next.js pour les titres */
   }
 }
 

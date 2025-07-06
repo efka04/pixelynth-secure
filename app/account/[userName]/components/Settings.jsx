@@ -385,8 +385,11 @@ export default function Settings() {
                             name="instagram"
                             value={formData.instagram}
                             onChange={handleChange}
-                            className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:border-black focus:ring-black"
-                            placeholder="username"
+                           // 🔐 On ajoute un pattern pour limiter les caractères autorisés (alphanumériques et underscore)
+                             pattern="[A-Za-z0-9_]+"
+                             title="Only letters, numbers and underscore"
+                             className="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:border-black focus:ring-black"
+                             placeholder="username"
                         />
                     </div>
                 </div>

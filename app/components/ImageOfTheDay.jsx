@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/app/db/firebaseConfig';
 
 export default function ImageOfTheDay() {
@@ -25,8 +25,8 @@ export default function ImageOfTheDay() {
         const q = query(
           imagesRef,
           where('orientation', '==', 'vertical'),
-          where('highlight', '==', 1),
-          limit(3)
+          where('highlight', '==', 1)
+          // SUPPRIMER limit(3)
         );
         const snapshot = await getDocs(q);
 
@@ -35,27 +35,35 @@ export default function ImageOfTheDay() {
           ...doc.data(),
         }));
 
-        console.log('Fetched highlighted vertical images:', highlightedImages); // Debug log
-
-        if (highlightedImages.length === 0) {
-          console.error('No vertical highlighted images available');
-          setImage({
-            id: 'default',
-            title: 'Default Image',
-            src: '/images/default-image.jpg',
-            alt: 'Default Image',
-            author: 'Pixelynth',
-            slug: 'default-image',
-          });
-          return;
+        // Mélange la liste d'images de façon déterministe selon la date du jour
+        function seededShuffle(array, seed) {
+          let m = array.length, t, i;
+          let random = mulberry32(seed);
+          while (m) {
+            i = Math.floor(random() * m--);
+            t = array[m];
+            array[m] = array[i];
+            array[i] = t;
+          }
+          return array;
         }
 
-        // Use the current date to select an image
-        const today = new Date();
-        const index = today.getDate() % highlightedImages.length;
-        const dailyImage = highlightedImages[index];
+        // Générateur pseudo-aléatoire basé sur la date (seed)
+        function mulberry32(a) {
+          return function() {
+            var t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+          }
+        }
 
-        console.log('Selected daily image:', dailyImage); // Debug log
+        // Utilise la date du jour comme seed
+        const today = new Date();
+        const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+        const shuffledImages = seededShuffle([...highlightedImages], seed);
+
+        const dailyImage = shuffledImages[0];
 
         setImage(dailyImage);
       } catch (error) {
