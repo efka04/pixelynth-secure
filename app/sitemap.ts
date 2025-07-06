@@ -162,3 +162,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await createSitemaps();
   return generateStaticRoutes();
 }
+

@@ -2,17 +2,17 @@ import type { Metadata, ResolvingMetadata } from "next";
 
 export const metadata: Metadata = {
   title: "Blog | Pixelynth",
-  description: "Découvrez les derniers articles et actualités sur Pixelynth.",
-  keywords: "blog, pixelynth, AI images, articles, actualités",
+  description: "Discover the latest articles and news on Pixelynth.",
+  keywords: "blog, pixelynth, AI images, articles, News",
   openGraph: {
     title: "Blog | Pixelynth",
-    description: "Découvrez les derniers articles et actualités sur Pixelynth.",
+    description: "Discover the latest articles and news on Pixelynth.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Blog | Pixelynth",
-    description: "Découvrez les derniers articles et actualités sur Pixelynth.",
+    description: "Discover the latest articles and news on Pixelynth.",
   },
 };
 

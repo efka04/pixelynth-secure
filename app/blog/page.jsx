@@ -40,7 +40,7 @@ const Blog = () => {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8 relative min-h-screen">
+    <main className="container mx-auto px-4 py-8 relative min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Blog</h1>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {articles.map((article) => (
@@ -69,7 +69,7 @@ const Blog = () => {
           <CreateArticleButton />
         </div>
       )}
-    </div>
+    </main>
   );
 };
 export default Blog;

@@ -25,12 +25,12 @@ export default function CollectionPage() {
   // Utiliser l'email de l'utilisateur au lieu du nom d'utilisateur
   // Dans le contexte de Firebase, nous avons besoin de l'email pour accéder aux collections
   return (
-    <div className="max-w-6xl mx-auto p-4">
+    <main className="max-w-6xl mx-auto p-4">
       <CollectionDetail 
         collectionId={params.collectionId} 
         userEmail={params.userName} 
         isUserNameNotEmail={true}
       />
-    </div>
+    </main>
   );
 }

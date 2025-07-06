@@ -116,7 +116,7 @@ export default function AdministrationArea() {
 
       {activeTab === 'posts' && (
         <div className="p-5 font-sans">
-          <h1 className="text-2xl font-bold mb-4">Zone d'administration</h1>
+          <h2 className="text-2xl font-bold mb-4">Zone d'administration</h2>
           <button 
             className="bg-blue-500 text-white px-5 py-2 rounded hover:bg-blue-600 mb-4"
             onClick={navigateToAllPictures}

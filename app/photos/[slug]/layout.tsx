@@ -23,7 +23,7 @@ type Props = {
 };
 
 export async function generateMetadata(
-  { params }: Props,
+{ params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   // Retrieve photo data - using await with params
@@ -39,7 +39,7 @@ export async function generateMetadata(
   
   // Create metadata based on photo data
   return {
-    title: `Free Photo of a ${photo.title} | Pixelynth`,
+    title: `Free Photo | ${photo.title} | Pixelynth`,
     description: `Discover this AI-generated image on Pixelynth. Download it for free for commercial or personal use.`,
     keywords: "AI images, stock photos, free images, artificial intelligence, digital art, stock images, AI generated images, AI pictures, royalty-free, commercial use",
     alternates: {

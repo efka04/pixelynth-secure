@@ -161,7 +161,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="p-5 font-sans">
+    <main className="p-5 font-sans">
       <h1 className="text-2xl font-bold mb-4">Page d'administration</h1>
       <button 
         className="bg-red-500 text-white px-5 py-2 rounded disabled:bg-gray-300 disabled:cursor-not-allowed mr-2" 
@@ -238,6 +238,6 @@ export default function AdminPage() {
         <h2 className="text-xl font-bold mb-4">Manage Featured Collections</h2>
         <FeaturedCollectionsManager />
       </div>
-    </div>
+    </main>
   );
 }

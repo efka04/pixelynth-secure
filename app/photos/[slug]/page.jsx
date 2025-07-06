@@ -116,7 +116,7 @@ export default async function ArticlePage({ params }) {
     const serializedPosts = morePosts.map(post => serializeData(post));
     
     return (
-      <div className="bg-white min-h-screen mt-8 max-w-7xl mx-auto px-4">
+      <main className="bg-white min-h-screen mt-8 max-w-7xl mx-auto px-4">
         <ClientInteractivity articleId={articleDetails.id}>
           <PhotosContent
             articleDetails={articleDetails}
@@ -124,7 +124,7 @@ export default async function ArticlePage({ params }) {
           />
         </ClientInteractivity>
         <SimilarPosts morePosts={serializedPosts} loadingMorePosts={false} />
-      </div>
+      </main>
     );
   } catch (error) {
     console.error('Error fetching article:', error);
