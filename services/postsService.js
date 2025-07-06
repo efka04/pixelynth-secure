@@ -50,8 +50,7 @@ export async function getPostsPaginated(lastDoc = null, pageSize = 20, filters =
   // Construire la requête finale avec and() pour les filtres
   let qFinal;
   if (filterConstraints.length > 0) {
-    qFinal = query(postsRef, and(...filterConstraints), ...otherConstraints);
-  } else {
+    qFinal = query(postsRef, ...filterConstraints, ...otherConstraints);  } else {
     qFinal = query(postsRef, ...otherConstraints);
   }
   

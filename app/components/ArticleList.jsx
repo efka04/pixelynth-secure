@@ -36,10 +36,11 @@ const ArticleList = React.memo(({ listPosts, showRemoveButton, onRemoveImage }) 
   }, [uniquePosts, displayedItems]);
 
   const loadMore = useCallback(() => {
-    if (isLoadingMore) return;
-    setIsLoadingMore(true);
-    setDisplayedItems((prev) => Math.min(prev + ITEMS_PER_PAGE, uniquePosts.length));
-    setIsLoadingMore(false);
+   if (isLoadingMore) return;
+  setIsLoadingMore(true);
+  setDisplayedItems((prev) => Math.min(prev + ITEMS_PER_PAGE, uniquePosts.length));
+ // Réinitialiser isLoadingMore après le rendu pour activer le scroll infini
+ setTimeout(() => setIsLoadingMore(false), 0);
   }, [uniquePosts.length, isLoadingMore]);
 
   useEffect(() => {
